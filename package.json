@@ -12,5 +12,8 @@
     "start:frontend:customer": "cd DeliverUS-Frontend-Customer && npx cross-env NODE_OPTIONS=--openssl-legacy-provider expo start",
     "install:all:win": "npm run copy:env:win && npm run install:backend && npm run migrate:backend && npm run install:frontend:owner && npm run install:frontend:customer",
     "install:all:bash": "npm run copy:env:bash && npm run install:backend && npm run migrate:backend && npm run install:frontend:owner && npm run install:frontend:customer"
+  },
+  "dependencies": {
+    "eslint": "^8.57.0"
   }
 }
