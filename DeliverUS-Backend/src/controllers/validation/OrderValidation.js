@@ -1,3 +1,5 @@
+import { check } from 'express-validator'
+import { Restaurant } from '../../models/models.js'
 // TODO: Include validation rules for create that should:
 // 1. Check that restaurantId is present in the body and corresponds to an existing restaurant
 // 2. Check that products is a non-empty array composed of objects with productId and quantity greater than 0
@@ -17,9 +19,9 @@ const checkRestaurantExists = async (value, { req }) => {
 
 const checkProducts = async (value) => {
     try {
-        const productsValid = value.every(obj => {
-            return obj.hasOwnProperty('productId') && Number.isInteger(obj.productId) && obj.productId > 0 &&
-                   obj.hasOwnProperty('quantity') && Number.isInteger(obj.quantity) && obj.quantity > 0;
+        const productsValid = value.every(product => {
+            return product.hasOwnProperty('productId') && product.productId > 0 &&
+                   product.orderProduct.hasOwnProperty('quantity') && product.orderProduct.quantity > 0;
         });
         if (!productsValid) {
             return Promise.reject(new Error('Each product must have a valid productId and quantity'));
@@ -44,13 +46,12 @@ const checkProducts = async (value) => {
     }
 }
 
-
-const checkProductsBelongToRestaurant = async (value, { req }) => {
+const checkProductsBelongToSameRestaurant = async (value) => {
     try {
-        const restaurantId = req.body.restaurantId;
-        const allProductsBelongToRestaurant = value.every(product => product.restaurantId === restaurantId);
+        const restaurantId = value.restaurantId;
+        const allProductsBelongToSameRestaurant = value.every(product => product.restaurantId === restaurantId);
 
-        if (!allProductsBelongToRestaurant) {
+        if (!allProductsBelongToSameRestaurant) {
             return Promise.reject(new Error('All products must belong to the same restaurant'));
         }
         return Promise.resolve();
@@ -63,9 +64,7 @@ const create = [
     check('restaurantId').exists().isInt({ min: 1 }).toInt().custom(checkRestaurantExists),
     check('products').isArray({ min: 1 }).custom(checkProducts),
     check('products').custom(checkProductsAvailability),
-    check('products').custom(checkProductsBelongToRestaurant)
-   
-
+    check('products').custom(checkProductsBelongToSameRestaurant)
 ]
 // TODO: Include validation rules for update that should:
 // 1. Check that restaurantId is NOT present in the body.
@@ -73,8 +72,28 @@ const create = [
 // 3. Check that products are available
 // 4. Check that all the products belong to the same restaurant of the originally saved order that is being edited.
 // 5. Check that the order is in the 'pending' state.
-const update = [
 
+const checkProductsBelongToRestaurant = async (value, { req }) => {
+    try {
+        const restaurantId = req.order.restaurantId;
+        const productsBelongToRestaurant = value.every(product => product.restaurantId === restaurantId);
+
+        if (!productsBelongToRestaurant) {
+            return Promise.reject(new Error('All products must belong to the restaurant that is being edited'));
+        }
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(new Error(error));
+    }
+};
+
+const update = [
+    check('restaurantId').not().exists(),
+    check('products').isArray({ min: 1 }).custom(checkProducts),
+    check('products').custom(checkProductsAvailability),
+    check('products').custom(checkProductsBelongToRestaurant),
+    check('createdAt').exists(),
+    check('startedAt').not().exists(), //A order is pending if it has been created but has not been started.
 ]
 
 export { create, update }
