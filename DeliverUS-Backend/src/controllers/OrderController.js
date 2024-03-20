@@ -88,7 +88,26 @@ const indexRestaurant = async function (req, res) {
 // Orders have to include products that belongs to each order and restaurant details
 // sort them by createdAt date, desc.
 const indexCustomer = async function (req, res) {
-  res.status(500).send('This function is to be implemented')
+  try {
+    const orders = await Order.findAll({
+      where: {
+        userId: req.user.id
+      },
+      include: [{
+        model: Product,
+        as: 'products'
+      },
+      {
+        model: Restaurant,
+        as: 'restaurant',
+        attributes: ['name', 'description', 'address', 'postalCode', 'url', 'shippingCosts', 'averageServiceMinutes', 'email', 'phone', 'logo', 'heroImage', 'status', 'restaurantCategoryId']
+      }],
+      order: [['createdAt', 'DESC']]
+    })
+    res.json(orders)
+  } catch (err) {
+    res.status(500).send(err)
+  }
 }
 
 // TODO: Implement the create function that receives a new order and stores it in the database.
@@ -98,9 +117,40 @@ const indexCustomer = async function (req, res) {
 // 3. In order to save the order and related products, start a transaction, store the order, store each product linea and commit the transaction
 // 4. If an exception is raised, catch it and rollback the transaction
 
-const create = async (req, res) => {
-  // Use sequelizeSession to start a transaction
-  res.status(500).send('This function is to be implemented')
+const _getProductsFromProductLines = async (productLines) => {
+  return await Product.findAll({
+    where: {
+      id: productLines.map(pl => pl.productId)
+    }
+  })
+}
+const _getRestaurantsFromProductLines = async (restaurantLines) => {
+  return await Restaurant.findAll({
+    where: {
+      id: productLines.map(pl => pl.productId)
+    }
+  })
+}
+const _applyShippingRules = (order,products) => {
+  
+  let orderTotal = 0;
+  products.forEach(product => {
+    orderTotal+=product.price
+  })
+  if(orderTotal<10){
+    orderTotal +=  Restaurant.find(r=>r.id===order.restaurantId).shippinCosts
+  }
+  order.price=orderTotal
+}
+
+const create = async function (req, res) {
+  let newOrder = Order.build(req.body)
+  try {
+    newOrder = await newOrder.save()
+    res.json(newOrder)
+  } catch (err) {
+    res.status(500).send(err)
+  }
 }
 
 // TODO: Implement the update function that receives a modified order and persists it in the database.
