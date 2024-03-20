@@ -8,6 +8,18 @@ const loadFileRoutes = function (app) {
   // TODO: Include routes for:
   // 1. Retrieving orders from current logged-in customer
   // 2. Creating a new order (only customers can create new orders)
+  app.route('/orders')
+    .get(
+      isLoggedIn,
+      hasRole('customer'),
+      OrderMiddleware.checkOrderCustomer,
+      OrderController.indexCustomer
+    )
+    .post(
+      isLoggedIn,
+      hasRole('customer'),
+      OrderController.create
+    )
 
   app.route('/orders/:orderId/confirm')
     .patch(
@@ -38,12 +50,25 @@ const loadFileRoutes = function (app) {
   // TODO: Include routes for:
   // 3. Editing order (only customers can edit their own orders)
   // 4. Remove order (only customers can remove their own orders)
+
   app.route('/orders/:orderId')
     .get(
       isLoggedIn,
       checkEntityExists(Order, 'orderId'),
       OrderMiddleware.checkOrderVisible,
       OrderController.show)
+    .patch(
+      hasRole('costumer'),
+      checkEntityExists(Order, 'orderId'),
+      OrderMiddleware.checkOrderCustomer,
+      OrderController.update
+    )
+    .delete(
+      hasRole('costumer'),
+      checkEntityExists(Order, 'orderId'),
+      OrderMiddleware.checkOrderCustomer,
+      OrderController.destroy
+    )
 }
 
 export default loadFileRoutes
