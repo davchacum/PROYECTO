@@ -7,64 +7,64 @@ import { Restaurant } from '../../models/models.js'
 // 4. Check that all the products belong to the same restaurant
 
 const checkRestaurantExists = async (value, { req }) => {
-    try {
-      const restaurant = await Restaurant.findByPk(req.body.restaurantId)
-      if (restaurant === null) {
-        return Promise.reject(new Error('The restaurantId does not exist.'))
-      } else { return Promise.resolve() }
-    } catch (err) {
-      return Promise.reject(new Error(err))
-    }
-  }
+	try {
+		const restaurant = await Restaurant.findByPk(req.body.restaurantId)
+		if (restaurant === null) {
+			return Promise.reject(new Error('The restaurantId does not exist.'))
+		} else { return Promise.resolve() }
+	} catch (err) {
+		return Promise.reject(new Error(err))
+	}
+}
 
 const checkProducts = async (value) => {
-    try {
-        const productsValid = value.every(product => {
-            return product.hasOwnProperty('productId') && product.productId > 0 &&
-                   product.orderProduct.hasOwnProperty('quantity') && product.orderProduct.quantity > 0;
-        });
-        if (!productsValid) {
-            return Promise.reject(new Error('Each product must have a valid productId and quantity'));
-        }
-        return Promise.resolve();
-    } catch (error) {
-        return Promise.reject(new Error(error));
-    }
- }
+	try {
+		const productsValid = value.every(product => {
+			return product.hasOwnProperty('productId') && product.productId > 0 &&
+                   product.orderProduct.hasOwnProperty('quantity') && product.orderProduct.quantity > 0
+		})
+		if (!productsValid) {
+			return Promise.reject(new Error('Each product must have a valid productId and quantity'))
+		}
+		return Promise.resolve()
+	} catch (error) {
+		return Promise.reject(new Error(error))
+	}
+}
 
- const checkProductsAvailability = async (value, { req }) => {
-    try {
-        const products = req.body.products;
-        for (const product of products) {
-            if (!product.availability) {
-                return Promise.reject(new Error('At least one product is unavailable'));
-            }
-        }
-        return Promise.resolve(); 
-    } catch (error) {
-        return Promise.reject(new Error(error));
-    }
+const checkProductsAvailability = async (value, { req }) => {
+	try {
+		const products = req.body.products
+		for (const product of products) {
+			if (!product.availability) {
+				return Promise.reject(new Error('At least one product is unavailable'))
+			}
+		}
+		return Promise.resolve()
+	} catch (error) {
+		return Promise.reject(new Error(error))
+	}
 }
 
 const checkProductsBelongToSameRestaurant = async (value) => {
-    try {
-        const restaurantId = value.restaurantId;
-        const allProductsBelongToSameRestaurant = value.every(product => product.restaurantId === restaurantId);
+	try {
+		const restaurantId = value.restaurantId
+		const allProductsBelongToSameRestaurant = value.every(product => product.restaurantId === restaurantId)
 
-        if (!allProductsBelongToSameRestaurant) {
-            return Promise.reject(new Error('All products must belong to the same restaurant'));
-        }
-        return Promise.resolve();
-    } catch (error) {
-        return Promise.reject(new Error(error));
-    }
-};
+		if (!allProductsBelongToSameRestaurant) {
+			return Promise.reject(new Error('All products must belong to the same restaurant'))
+		}
+		return Promise.resolve()
+	} catch (error) {
+		return Promise.reject(new Error(error))
+	}
+}
 
 const create = [
-    check('restaurantId').exists().isInt({ min: 1 }).toInt().custom(checkRestaurantExists),
-    check('products').isArray({ min: 1 }).custom(checkProducts),
-    check('products').custom(checkProductsAvailability),
-    check('products').custom(checkProductsBelongToSameRestaurant)
+	check('restaurantId').exists().isInt({ min: 1 }).toInt().custom(checkRestaurantExists),
+	check('products').isArray({ min: 1 }).custom(checkProducts),
+	check('products').custom(checkProductsAvailability),
+	check('products').custom(checkProductsBelongToSameRestaurant)
 ]
 // TODO: Include validation rules for update that should:
 // 1. Check that restaurantId is NOT present in the body.
@@ -74,26 +74,26 @@ const create = [
 // 5. Check that the order is in the 'pending' state.
 
 const checkProductsBelongToRestaurant = async (value, { req }) => {
-    try {
-        const restaurantId = req.order.restaurantId;
-        const productsBelongToRestaurant = value.every(product => product.restaurantId === restaurantId);
+	try {
+		const restaurantId = req.order.restaurantId
+		const productsBelongToRestaurant = value.every(product => product.restaurantId === restaurantId)
 
-        if (!productsBelongToRestaurant) {
-            return Promise.reject(new Error('All products must belong to the restaurant that is being edited'));
-        }
-        return Promise.resolve();
-    } catch (error) {
-        return Promise.reject(new Error(error));
-    }
-};
+		if (!productsBelongToRestaurant) {
+			return Promise.reject(new Error('All products must belong to the restaurant that is being edited'))
+		}
+		return Promise.resolve()
+	} catch (error) {
+		return Promise.reject(new Error(error))
+	}
+}
 
 const update = [
-    check('restaurantId').not().exists(),
-    check('products').isArray({ min: 1 }).custom(checkProducts),
-    check('products').custom(checkProductsAvailability),
-    check('products').custom(checkProductsBelongToRestaurant),
-    check('createdAt').exists(),
-    check('startedAt').not().exists(), //A order is pending if it has been created but has not been started.
+	check('restaurantId').not().exists(),
+	check('products').isArray({ min: 1 }).custom(checkProducts),
+	check('products').custom(checkProductsAvailability),
+	check('products').custom(checkProductsBelongToRestaurant),
+	check('createdAt').exists(),
+	check('startedAt').not().exists() // A order is pending if it has been created but has not been started.
 ]
 
 export { create, update }
