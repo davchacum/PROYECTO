@@ -20,8 +20,8 @@ const checkRestaurantExists = async (value, { req }) => {
 const checkProducts = async (value) => {
 	try {
 		const productsValid = value.every(product => {
-			return product.hasOwnProperty('productId') && product.productId > 0 &&
-                   product.orderProduct.hasOwnProperty('quantity') && product.orderProduct.quantity > 0
+			return product.exists('productId') && product.productId > 0 &&
+                   product.orderProduct.exists('quantity') && product.orderProduct.quantity > 0
 		})
 		if (!productsValid) {
 			return Promise.reject(new Error('Each product must have a valid productId and quantity'))
