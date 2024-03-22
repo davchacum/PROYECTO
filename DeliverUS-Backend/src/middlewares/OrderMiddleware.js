@@ -30,7 +30,7 @@ const checkRestaurantExists = async (req, res, next) => {
 		} else if (req.order.restaurant.id === order.restaurant.id) {
 			return next()
 		} else {
-			return res.status(409).send('Not Found. The restaurant associated to this order does not exist')
+			return res.status(404).send('Not found.The restaurant associated to this order does not exist')
 		}
 	} catch (err) {
 		return res.status(500).send(err)
