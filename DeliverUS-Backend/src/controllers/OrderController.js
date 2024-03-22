@@ -142,8 +142,8 @@ const _applyShippingRules = async (order, productLines) => {
 	return order
 }
 const _saveOrderProducts = async (order, productLines, transaction) => {
-	const addProductLinesPromises = productLines.forEach(pl => {
-		order.addProduct(pl.productId, { through: { quantity: pl.quantity, unityPrice: pl.unityPrice }, transaction })
+	const addProductLinesPromises = productLines.map(pl => {
+		return order.addProduct(pl.productId, { through: { quantity: pl.quantity, unityPrice: pl.unityPrice }, transaction })
 	})
 	return Promise.all(addProductLinesPromises)
 }
