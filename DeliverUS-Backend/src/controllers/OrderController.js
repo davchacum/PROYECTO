@@ -133,7 +133,6 @@ const _getProductLinesWithPrices = async (productLines) => {
 
 const _applyShippingRules = async (order, productLines) => {
 	let orderTotal = productLines.reduce((total, productLines) => total + productLines.quantity * productLines.unityPrice, 0)
-  let shippingCosts = 0
   if (orderTotal < 10) {
     const restaurant = await Restaurant.findByPk(order.restaurantId)
     order.shippingCosts = restaurant.shippingCosts
