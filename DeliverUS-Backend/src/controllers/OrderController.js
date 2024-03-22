@@ -131,17 +131,19 @@ const _getProductLinesWithPrices = async (productLines) => {
 	return productLinesCopy
 }
 
-const _applyShippingRules = (order, productLines) => {
+const _applyShippingRules = async (order, productLines) => {
 	let orderTotal = productLines.reduce((total, productLines) => total + productLines.quantity * productLines.unityPrice, 0)
-	if (orderTotal < 10) {
-		orderTotal += Restaurant.find(r => r.id === order.restaurantId).shippinCosts
+  let shippingCosts = 0
+  if (orderTotal < 10) {
+    const restaurant = await Restaurant.findByPk(order.restaurantId)
+    order.shippingCosts = restaurant.shippingCosts
 	}
-	order.price = orderTotal
+	order.price = orderTotal + order.shippingCosts
 	return order
 }
 const _saveOrderProducts = async (order, productLines, transaction) => {
-	const addProductLinesPromises = productLines.map(pl => {
-		return order.addProduct(pl.productId, { through: { quantity: pl.quantity, unityPrice: pl.unityPrice }, transaction })
+	const addProductLinesPromises = productLines.forEach(pl => {
+		order.addProduct(pl.productId, { through: { quantity: pl.quantity, unityPrice: pl.unityPrice }, transaction })
 	})
 	return Promise.all(addProductLinesPromises)
 }
@@ -155,16 +157,17 @@ const _saveOrderWithProducts = async (order, productLines, transaction) => {
 
 const create = async function (req, res) {
 	let newOrder = Order.build(req.body)
+  newOrder.userId = req.user.id
 	const transaction = await sequelizeSession.transaction()
 	try {
-		const productLinesPrice = await _getProductLinesWithPrices(res.body.products)
+		const productLinesPrice = await _getProductLinesWithPrices(req.body.products)
 		newOrder = await newOrder.save()
 		newOrder = await _applyShippingRules(newOrder, productLinesPrice)
 		newOrder = await _saveOrderWithProducts(newOrder, productLinesPrice, transaction)
-		transaction.commit()
+		await transaction.commit()
 		res.json(newOrder)
 	} catch (err) {
-		transaction.rollback()
+		await transaction.rollback()
 		res.status(500).send(err)
 	}
 }
@@ -182,13 +185,13 @@ const update = async function (req, res) {
 		let updatedOrder = await Order.findByPk(req.params.orderId)
 		await updatedOrder.setProducts([], { transaction })
 
-		const productLinesPrice = await _getProductLinesWithPrices(res.body.products)
+		const productLinesPrice = await _getProductLinesWithPrices(req.body.products)
 		updatedOrder = await _applyShippingRules(updatedOrder, productLinesPrice)
 		updatedOrder = await _saveOrderWithProducts(updatedOrder, productLinesPrice, transaction)
-		transaction.commit()
+		await transaction.commit()
 		res.json(updatedOrder)
 	} catch (err) {
-		transaction.rollback()
+		await transaction.rollback()
 		res.status(500).send(err)
 	}
 }
@@ -201,7 +204,7 @@ const destroy = async function (req, res) {
 		const result = await Order.destroy({ where: { id: req.params.restaurantId } })
 		let message = ''
 		if (result === 1) {
-			message = 'Sucessfuly deleted Order id.' + req.params.restaurantId
+			message = 'Successfuly deleted Order id.' + req.params.restaurantId
 		} else {
 			message = 'Could not delete Order.'
 		}
