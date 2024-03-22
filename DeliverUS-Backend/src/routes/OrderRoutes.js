@@ -56,14 +56,16 @@ const loadFileRoutes = function (app) {
 			checkEntityExists(Order, 'orderId'),
 			OrderMiddleware.checkOrderVisible,
 			OrderController.show)
-		.patch(
-			hasRole('costumer'),
+		.put(
+			isLoggedIn,
+			hasRole('customer'),
 			checkEntityExists(Order, 'orderId'),
 			OrderMiddleware.checkOrderCustomer,
 			OrderController.update
 		)
 		.delete(
-			hasRole('costumer'),
+			isLoggedIn,
+			hasRole('customer'),
 			checkEntityExists(Order, 'orderId'),
 			OrderMiddleware.checkOrderCustomer,
 			OrderController.destroy
