@@ -17,6 +17,8 @@ const loadFileRoutes = function (app) {
 		.post(
 			isLoggedIn,
 			hasRole('customer'),
+			// OrderValidation.create,
+			// handleValidation,
 			OrderController.create
 		)
 
@@ -60,6 +62,8 @@ const loadFileRoutes = function (app) {
 			isLoggedIn,
 			hasRole('customer'),
 			checkEntityExists(Order, 'orderId'),
+			// OrderValidation.create,
+			// handleValidation,
 			OrderMiddleware.checkOrderCustomer,
 			OrderController.update
 		)
