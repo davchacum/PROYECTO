@@ -66,6 +66,7 @@ const create = [
 	check('products').custom(checkProductsAvailability),
 	check('products').custom(checkProductsBelongToSameRestaurant)
 ]
+
 // TODO: Include validation rules for update that should:
 // 1. Check that restaurantId is NOT present in the body.
 // 2. Check that products is a non-empty array composed of objects with productId and quantity greater than 0
@@ -93,7 +94,7 @@ const update = [
 	check('products').custom(checkProductsAvailability),
 	check('products').custom(checkProductsBelongToRestaurant),
 	check('createdAt').exists(),
-	check('startedAt').not().exists() // A order is pending if it has been created but has not been started.
+	check('startedAt').not().exists() // An order is pending if it has been created but has not been started.
 ]
 
 export { create, update }

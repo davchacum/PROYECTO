@@ -6,12 +6,10 @@ const checkOrderCustomer = async (req, res, next) => {
 		const order = await Order.findByPk(req.params.orderId)
 		if (!order) {
 			return res.status(404).send('Not Found. This order does not exist')
+		} else if (req.user.id === order.userId) {
+			return next()
 		} else {
-			if (req.user.id === order.userId) {
-				return next()
-			} else {
-				return res.status(403).send('Not enough privileges. This entity does not belong to you')
-			}
+			return res.status(403).send('Not enough privileges. This entity does not belong to you')
 		}
 	} catch (err) {
 		return res.status(500).send(err)
@@ -29,12 +27,10 @@ const checkRestaurantExists = async (req, res, next) => {
 		})
 		if (!order) {
 			return res.status(404).send('Not Found. This order does not exist')
+		} else if (req.order.restaurant.id === order.restaurant.id) {
+			return next()
 		} else {
-			if (req.order.restaurant.id === order.restaurant.id) {
-				return next()
-			} else {
-				return res.status(404).send('Not Found. The restauran associated to this order does not exist')
-			}
+			return res.status(404).send('Not Found. The restaurant associated to this order does not exist')
 		}
 	} catch (err) {
 		return res.status(500).send(err)
