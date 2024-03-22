@@ -127,12 +127,12 @@ const _getProductsFromProductLines = async (productLines) => {
 const _getProductLinesWithPrices = async (productLines) => {
 	const products = await _getProductsFromProductLines(productLines)
 	const productLinesCopy = [...productLines]
-	productLinesCopy.forEach(pl => { pl.unityPrice = products.find(p => p.id == pl.productId).price })
+	productLinesCopy.forEach(pl => { pl.unityPrice = products.find(p => p.id === pl.productId).price })
 	return productLinesCopy
 }
 
 const _applyShippingRules = (order, productLines) => {
-	const orderTotal = productLines.reduce((total, productLines) => total + productLines.quantity * productLines.unityPrice, 0)
+	let orderTotal = productLines.reduce((total, productLines) => total + productLines.quantity * productLines.unityPrice, 0)
 	if (orderTotal < 10) {
 		orderTotal += Restaurant.find(r => r.id === order.restaurantId).shippinCosts
 	}
@@ -179,7 +179,7 @@ const update = async function (req, res) {
 	const transaction = await sequelizeSession.transaction()
 	try {
 		await Order.update(req.body, { where: { id: req.params.orderId } }, { transaction })
-		const updatedOrder = await Order.findByPk(req.params.orderId)
+		let updatedOrder = await Order.findByPk(req.params.orderId)
 		await updatedOrder.setProducts([], { transaction })
 
 		const productLinesPrice = await _getProductLinesWithPrices(res.body.products)
@@ -277,37 +277,37 @@ const analytics = async function (req, res) {
 	try {
 		const numYesterdayOrders = await Order.count({
 			where:
-      {
-      	createdAt: {
-      		[Op.lt]: todayZeroHours,
-      		[Op.gte]: yesterdayZeroHours
-      	},
-      	restaurantId: req.params.restaurantId
-      }
+			{
+				createdAt: {
+					[Op.lt]: todayZeroHours,
+					[Op.gte]: yesterdayZeroHours
+				},
+				restaurantId: req.params.restaurantId
+			}
 		})
 		const numPendingOrders = await Order.count({
 			where:
-      {
-      	startedAt: null,
-      	restaurantId: req.params.restaurantId
-      }
+		{
+			startedAt: null,
+			restaurantId: req.params.restaurantId
+		}
 		})
 		const numDeliveredTodayOrders = await Order.count({
 			where:
-      {
-      	deliveredAt: { [Op.gte]: todayZeroHours },
-      	restaurantId: req.params.restaurantId
-      }
+		{
+			deliveredAt: { [Op.gte]: todayZeroHours },
+			restaurantId: req.params.restaurantId
+		}
 		})
 
 		const invoicedToday = await Order.sum(
 			'price',
 			{
 				where:
-        {
-        	createdAt: { [Op.gte]: todayZeroHours }, // FIXME: Created or confirmed?
-        	restaurantId: req.params.restaurantId
-        }
+			{
+				createdAt: { [Op.gte]: todayZeroHours }, // FIXME: Created or confirmed?
+				restaurantId: req.params.restaurantId
+			}
 			})
 		res.json({
 			restaurantId: req.params.restaurantId,
