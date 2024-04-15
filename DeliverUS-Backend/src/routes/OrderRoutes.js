@@ -32,6 +32,7 @@ const loadFileRoutes = function (app) {
 			OrderMiddleware.checkOrderOwnership,
 			OrderMiddleware.checkOrderIsPending,
 			OrderController.confirm)
+
 	app.route('/orders/:orderId/send')
 		.patch(
 			isLoggedIn,

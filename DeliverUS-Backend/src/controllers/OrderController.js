@@ -2,6 +2,7 @@
 import { Order, Product, Restaurant, User, sequelizeSession } from '../models/models.js'
 import moment from 'moment'
 import { Op } from 'sequelize'
+
 const generateFilterWhereClauses = function (req) {
 	const filterWhereClauses = []
 	if (req.query.status) {
@@ -132,10 +133,10 @@ const _getProductLinesWithPrices = async (productLines) => {
 }
 
 const _applyShippingRules = async (order, productLines) => {
-	let orderTotal = productLines.reduce((total, productLines) => total + productLines.quantity * productLines.unityPrice, 0)
-  if (orderTotal < 10) {
-    const restaurant = await Restaurant.findByPk(order.restaurantId)
-    order.shippingCosts = restaurant.shippingCosts
+	const orderTotal = productLines.reduce((total, productLines) => total + productLines.quantity * productLines.unityPrice, 0)
+	if (orderTotal < 10) {
+		const restaurant = await Restaurant.findByPk(order.restaurantId)
+		order.shippingCosts = restaurant.shippingCosts
 	}
 	order.price = orderTotal + order.shippingCosts
 	return order
@@ -156,7 +157,7 @@ const _saveOrderWithProducts = async (order, productLines, transaction) => {
 
 const create = async function (req, res) {
 	let newOrder = Order.build(req.body)
-  newOrder.userId = req.user.id
+	newOrder.userId = req.user.id
 	const transaction = await sequelizeSession.transaction()
 	try {
 		const productLinesPrice = await _getProductLinesWithPrices(req.body.products)
