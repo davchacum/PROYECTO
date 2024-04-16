@@ -201,10 +201,10 @@ const update = async function (req, res) {
 // 1. The migration include the "ON DELETE CASCADE" directive so OrderProducts related to this order will be automatically removed.
 const destroy = async function (req, res) {
 	try {
-		const result = await Order.destroy({ where: { id: req.params.restaurantId } })
+		const result = await Order.destroy({ where: { id: req.params.orderId } })
 		let message = ''
 		if (result === 1) {
-			message = 'Successfuly deleted Order id.' + req.params.restaurantId
+			message = 'Successfuly deleted Order id.' + req.params.orderId
 		} else {
 			message = 'Could not delete Order.'
 		}
