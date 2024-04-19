@@ -9,7 +9,7 @@ import { Restaurant } from '../../models/models.js'
 const checkRestaurantExists = async (value, { req }) => {
 	try {
 		const restaurant = await Restaurant.findByPk(req.body.restaurantId)
-		if (restaurant === null) {
+		if (restaurant == null) {
 			return Promise.reject(new Error('The restaurantId does not exist.'))
 		} else { return Promise.resolve() }
 	} catch (err) {
@@ -48,8 +48,8 @@ const checkProductsAvailability = async (value, { req }) => {
 
 const checkProductsBelongToSameRestaurant = async (value) => {
 	try {
-		const restaurantId = value.restaurantId
-		const allProductsBelongToSameRestaurant = value.every(product => product.restaurantId === restaurantId)
+		const restId = value.restaurantId
+		const allProductsBelongToSameRestaurant = value.every(product => product.restaurantId === restId)
 
 		if (!allProductsBelongToSameRestaurant) {
 			return Promise.reject(new Error('All products must belong to the same restaurant'))
@@ -62,9 +62,10 @@ const checkProductsBelongToSameRestaurant = async (value) => {
 
 const create = [
 	check('restaurantId').exists().isInt({ min: 1 }).toInt().custom(checkRestaurantExists),
-	check('products').isArray({ min: 1 }).custom(checkProducts),
+	check('products.*.quantity').isArray({ min: 1 }).custom(checkProducts),
 	check('products').custom(checkProductsAvailability),
-	check('products').custom(checkProductsBelongToSameRestaurant)
+	check('products').custom(checkProductsBelongToSameRestaurant),
+	check('address').exists()
 ]
 
 // TODO: Include validation rules for update that should:
@@ -90,7 +91,7 @@ const checkProductsBelongToRestaurant = async (value, { req }) => {
 
 const update = [
 	check('restaurantId').not().exists(),
-	check('products').isArray({ min: 1 }).custom(checkProducts),
+	check('products.*.quantity').isArray({ min: 1 }).custom(checkProducts),
 	check('products').custom(checkProductsAvailability),
 	check('products').custom(checkProductsBelongToRestaurant),
 	check('createdAt').exists(),
