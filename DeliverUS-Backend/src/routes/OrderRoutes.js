@@ -66,14 +66,16 @@ const loadFileRoutes = function (app) {
 			hasRole('customer'),
 			checkEntityExists(Order, 'orderId'),
 			OrderValidation.update,
-			handleValidation,
+			OrderMiddleware.checkOrderIsPending,
 			OrderMiddleware.checkOrderCustomer,
+			handleValidation,
 			OrderController.update
 		)
 		.delete(
 			isLoggedIn,
 			hasRole('customer'),
 			checkEntityExists(Order, 'orderId'),
+			OrderMiddleware.checkOrderIsPending,
 			OrderMiddleware.checkOrderCustomer,
 			OrderController.destroy
 		)
