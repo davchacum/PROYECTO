@@ -6,7 +6,8 @@ const checkOrderCustomer = async (req, res, next) => {
 		const order = await Order.findByPk(req.params.orderId)
 		if (!order) {
 			return res.status(404).send('Not Found. This order does not exist')
-		} else if (req.user.id === order.userId) {
+		}
+		if (order.userId === req.user.id) {
 			return next()
 		} else {
 			return res.status(403).send('Not enough privileges. This entity does not belong to you')

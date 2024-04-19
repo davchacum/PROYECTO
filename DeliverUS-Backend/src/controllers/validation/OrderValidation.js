@@ -9,7 +9,7 @@ import { Restaurant } from '../../models/models.js'
 const checkRestaurantExists = async (value, { req }) => {
 	try {
 		const restaurant = await Restaurant.findByPk(req.body.restaurantId)
-		if (restaurant == null) {
+		if (restaurant === null) {
 			return Promise.reject(new Error('The restaurantId does not exist.'))
 		} else { return Promise.resolve() }
 	} catch (err) {
@@ -65,7 +65,9 @@ const create = [
 	check('products.*.quantity').isArray({ min: 1 }).custom(checkProducts),
 	check('products').custom(checkProductsAvailability),
 	check('products').custom(checkProductsBelongToSameRestaurant),
-	check('address').exists()
+	check('price').exists().isFloat({ min: 0 }).toFloat(),
+	check('address').exists().isString().isLength({ min: 1, max: 255 }).trim(),
+	check('shippingCosts').exists().isFloat({ min: 0 }).toFloat()
 ]
 
 // TODO: Include validation rules for update that should:
@@ -95,7 +97,10 @@ const update = [
 	check('products').custom(checkProductsAvailability),
 	check('products').custom(checkProductsBelongToRestaurant),
 	check('createdAt').exists(),
-	check('startedAt').not().exists() // An order is pending if it has been created but has not been started.
+	check('startedAt').not().exists(), // An order is pending if it has been created but has not been started.
+	check('price').exists().isFloat({ min: 0 }).toFloat(),
+	check('address').exists().isString().isLength({ min: 1, max: 255 }).trim(),
+	check('shippingCosts').exists().isFloat({ min: 0 }).toFloat()
 ]
 
 export { create, update }
