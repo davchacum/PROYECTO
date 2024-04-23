@@ -10,8 +10,8 @@ import { Product, Restaurant, Order } from '../../models/models.js'
 
 const checkRestaurantExists = async (value, { req }) => {
 	try {
-		const restaurant = await Restaurant.findByPk(req.body.restaurantId)
-		if (restaurant == null) {
+		const restaurant = await Restaurant.findByPk(req.body.restaurantId) // busco restaurante en la database
+		if (!restaurant) { // si no existe, lo rechaza
 			return Promise.reject(new Error('The restaurantId does not exist.'))
 		} else { return Promise.resolve() }
 	} catch (err) {
@@ -19,59 +19,44 @@ const checkRestaurantExists = async (value, { req }) => {
 	}
 }
 
-// const checkProducts = async (value) => {
-// 	try {
-// 		const productsValid = value.every(product => {
-// 			return product.exists('productId') && product.productId > 0 &&
-//                    product.orderProduct.exists('quantity') && product.orderProduct.quantity > 0
-// 		})
-// 		if (!productsValid) {
-// 			return Promise.reject(new Error('Each product must have a valid productId and quantity'))
-// 		}
-// 		return Promise.resolve()
-// 	} catch (error) {
-// 		return Promise.reject(new Error(error))
-// 	}
-// }
-
-const checkProductsBelongToSameRestaurant = async (value, { req }) => {
-	try {
-	  const orderRestaurantId = parseInt(req.body.restaurantId) // obtengo el id del restaurante al que se realizan los pedidos
-	  const products = await Product.findAll({ // obtengo de la base de datos los productos
-			where: {
-		  id: req.body.products.map(x => x.productId)
-			},
-			attributes: ['restaurantId']
-	  })
-	  if (products.some(x => x.restaurantId !== orderRestaurantId)) { // busco si algun producto tiene diferente restaurantId
-			return Promise.reject(new Error('Products do not belong to the same restaurant'))
-	  } else {
-			return Promise.resolve()
-	  }
-	} catch (err) {
-	  return Promise.reject(new Error(err))
-	}
-}
-
 const checkProductsAvailability = async (value, { req }) => {
 	try {
-		const products = req.body.products
-		const productsids = products.map(product => product.productId)
+		const products = req.body.products // obtengo los productos
+		const productsids = products.map(product => product.productId) // mapeo por id
 		const allProducts = await Product.findAll(
 			{
 				where: {
 					id: productsids,
 					availability: true
 				}
-			})
+			}) // busca todos los productos de la database en los que availability es true y el id está en productsIds
 
-		if (allProducts.length !== req.body.products.length) {
+		if (allProducts.length !== req.body.products.length) { // si la longitudo de mi productos y la database son distintas,rechazo
 			return Promise.reject(new Error('At least one product is unavailable'))
 		} else {
 			return Promise.resolve()
 		}
 	} catch (error) {
 		return Promise.reject(new Error(error))
+	}
+}
+
+const checkProductsBelongToSameRestaurant = async (value, { req }) => {
+	try {
+	  const orderRestaurantId = parseInt(req.body.restaurantId) // obtengo el id del restaurante al que se realizan los pedidos
+	  const products = await Product.findAll({ // obtengo de la base de datos los productos
+			where: {
+		  id: req.body.products.map(p => p.productId) // mapeo por productoId
+			},
+			attributes: ['restaurantId'] // tiene que contener el atributo restauranteId
+	  })
+	  if (products.some(p => p.restaurantId !== orderRestaurantId)) { // busco si algun producto tiene diferente restaurantId
+			return Promise.reject(new Error('Products do not belong to the same restaurant'))
+	  } else {
+			return Promise.resolve()
+	  }
+	} catch (err) {
+	  return Promise.reject(new Error(err))
 	}
 }
 
@@ -97,14 +82,14 @@ const create = [
 const checkProductsBelongToOriginalRestaurant = async (value, { req }) => {
 	try {
 	  const order = await Order.findByPk(req.params.orderId) // obtengo el pedido
-	  const products = req.body.products
-	  const productsIds = products.map(product => product.productId)
-	  const productsDb = await Product.findAll({ // obtengo los productos de la base de datos con id igual al obtenido en la peticion
+	  const products = req.body.products // obtengo los productos
+	  const productsIds = products.map(product => product.productId) // mapeo por id
+	  const productsDb = await Product.findAll({
 			where: {
 		  id: productsIds
 			},
 			attributes: ['restaurantId']
-	  })
+	  })// busca todos los productos de la database en los que availability es true y el id está en productsIds de mi peticion
 	  if (productsDb.some(x => x.restaurantId !== order.restaurantId)) { // comprueba si algún producto de la base de datos tenga restaurantId diferente al de la peticion
 			return Promise.reject(new Error('Products do not belong to the same restaurant'))
 	  } else {
@@ -117,7 +102,7 @@ const checkProductsBelongToOriginalRestaurant = async (value, { req }) => {
 
 const checkOrderIsPending = async (value, { req }) => {
 	try {
-	  const order = await Order.findByPk(req.params.orderId) // obtengo el pedido con id pasada por parámetros
+	  const order = await Order.findByPk(req.params.orderId) // obtengo el pedido con id pasado por los parametros de mi peticion
 	  if (order.status === 'pending') { // compruebo que esté pendiente
 			return Promise.resolve()
 	  } else {

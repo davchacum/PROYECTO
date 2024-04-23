@@ -1,8 +1,6 @@
-// eslint-disable-next-line no-unused-vars
 import { Order, Product, Restaurant, User, sequelizeSession } from '../models/models.js'
 import moment from 'moment'
 import { Op } from 'sequelize'
-
 const generateFilterWhereClauses = function (req) {
 	const filterWhereClauses = []
 	if (req.query.status) {
@@ -88,7 +86,6 @@ const indexRestaurant = async function (req, res) {
 // TODO: Implement the indexCustomer function that queries orders from current logged-in customer and send them back.
 // Orders have to include products that belongs to each order and restaurant details
 // sort them by createdAt date, desc.
-
 const indexCustomer = async function (req, res) {
 	try {
 		const orders = await Order.findAll({
@@ -102,7 +99,7 @@ const indexCustomer = async function (req, res) {
 			{
 				model: Restaurant,
 				as: 'restaurant',
-				attributes: { exclude: ['createdAt', 'updatedAt'] }
+				attributes: ['name', 'description', 'address', 'postalCode', 'url', 'shippingCosts', 'averageServiceMinutes', 'email', 'phone', 'logo', 'heroImage', 'status', 'restaurantCategoryId']
 			}],
 			order: [['createdAt', 'DESC']]
 		})
@@ -132,23 +129,24 @@ const _getProductLinesWithPrices = async (productLines) => {
 	productLinesCopy.forEach(pl => { pl.unityPrice = products.find(p => p.id === pl.productId).price })
 	return productLinesCopy
 }
-
-const _applyShippingRules = async (order, productLines) => {
-	const orderTotal = productLines.reduce((total, productLines) => total + productLines.quantity * productLines.unityPrice, 0)
-	if (orderTotal < 10) {
-		const restaurant = await Restaurant.findByPk(order.restaurantId)
-		order.shippingCosts = restaurant.shippingCosts
+const _computeOrderProductsPrice = (productLinesWithPrices) => {
+	const orderPrice = productLinesWithPrices.reduce((total, productLineWithPrice) => total + productLineWithPrice.quantity * productLineWithPrice.unityPrice, 0)
+	return orderPrice
+}
+const _computeShippingCosts = async (priceOfProducts, restaurantId) => {
+	let shippingCosts = 0
+	if (priceOfProducts < 10) {
+		const restaurant = await Restaurant.findByPk(restaurantId)
+		shippingCosts = restaurant.shippingCosts
 	}
-	order.price = orderTotal + order.shippingCosts
-	return order
+	return shippingCosts
 }
 const _saveOrderProducts = async (order, productLines, transaction) => {
-	const addProductLinesPromises = productLines.map(pl => {
-		return order.addProduct(pl.productId, { through: { quantity: pl.quantity, unityPrice: pl.unityPrice }, transaction })
+	const addProductLinesPromises = productLines.map(productLine => {
+		return order.addProduct(productLine.productId, { through: { quantity: productLine.quantity, unityPrice: productLine.unityPrice }, transaction })
 	})
 	return Promise.all(addProductLinesPromises)
 }
-
 const _saveOrderWithProducts = async (order, productLines, transaction) => {
 	let savedOrder = await order.save({ transaction })
 	await _saveOrderProducts(savedOrder, productLines, transaction)
@@ -156,57 +154,25 @@ const _saveOrderWithProducts = async (order, productLines, transaction) => {
 	return savedOrder
 }
 
-// const create = async function (req, res) {
-// 	let newOrder = Order.build(req.body)
-// 	newOrder.userId = req.user.id
-// 	const transaction = await sequelizeSession.transaction()
-// 	try {
-// 		const productLinesPrice = await _getProductLinesWithPrices(req.body.products)
-// 		newOrder = await newOrder.save()
-// 		newOrder = await _applyShippingRules(newOrder, productLinesPrice)
-// 		newOrder = await _saveOrderWithProducts(newOrder, productLinesPrice, transaction)
-// 		await transaction.commit()
-// 		res.json(newOrder)
-// 	} catch (err) {
-// 		await transaction.rollback()
-// 		res.status(500).send(err)
-// 	}
-// }
-
+const _getOrderWithShippingCostsAndPrice = async (order, productLinesWithPrices) => {
+	const orderProductsPrice = _computeOrderProductsPrice(productLinesWithPrices)
+	order.shippingCosts = await _computeShippingCosts(orderProductsPrice, order.restaurantId)
+	order.price = orderProductsPrice + order.shippingCosts
+	return order
+}
 const create = async (req, res) => {
-	const seqSes = await sequelizeSession.transaction()
+	let newOrder = Order.build(req.body)
+	newOrder.userId = req.user.id
+	const transaction = await sequelizeSession.transaction()
 	try {
-		let orderC = Order.build(req.body)
-		let precio = 0
-
-		for (const product of req.body.products) {
-			const productD = await Product.findByPk(product.productId)
-			precio += product.quantity + productD.price
-		}
-
-		let shippingCosts = 0
-		if (precio <= 10) {
-			const restaurant = await Restaurant.findByPk(req.body.restaurantId)
-			shippingCosts = restaurant.shippingCosts
-		}
-
-		orderC.createdAt = Date.now()
-		orderC.userId = req.user.id
-		orderC.shippingCosts = shippingCosts
-		orderC.price = precio + orderC.shippingCosts
-
-		orderC = await orderC.save({ seqSes })
-		for (const product of req.body.products) {
-			const databaseProduct = await Product.findByPk(product.productId)
-			await orderC.addProduct(databaseProduct, { through: { quantity: product.quantity, unityPrice: databaseProduct.price }, seqSes })
-		}
-
-		await seqSes.commit()
-		const OrderFinal = await Order.findByPk(orderC.id, { include: [{ model: Product, as: 'products' }] })
-		res.json(OrderFinal)
-	} catch (error) {
-		await seqSes.rollback()
-		res.status(500).send(error)
+		const productLinesWithPrices = await _getProductLinesWithPrices(req.body.products)
+		newOrder = await _getOrderWithShippingCostsAndPrice(newOrder, productLinesWithPrices)
+		newOrder = await _saveOrderWithProducts(newOrder, productLinesWithPrices, transaction)
+		await transaction.commit()
+		res.json(newOrder)
+	} catch (err) {
+		await transaction.rollback()
+		res.status(500).send(err)
 	}
 }
 
@@ -216,16 +182,15 @@ const create = async (req, res) => {
 // 2. If price is less or equals to 10€, shipping costs have to be restaurant default shipping costs and have to be added to the order total price
 // 3. In order to save the updated order and updated products, start a transaction, update the order, remove the old related OrderProducts and store the new product lines, and commit the transaction
 // 4. If an exception is raised, catch it and rollback the transaction
-async function update (req, res) {
+const update = async function (req, res) {
 	const transaction = await sequelizeSession.transaction()
 	try {
 		await Order.update(req.body, { where: { id: req.params.orderId } }, { transaction })
 		let updatedOrder = await Order.findByPk(req.params.orderId)
 		await updatedOrder.setProducts([], { transaction })
-
-		const productLinesPrice = await _getProductLinesWithPrices(req.body.products)
-		updatedOrder = await _applyShippingRules(updatedOrder, productLinesPrice)
-		updatedOrder = await _saveOrderWithProducts(updatedOrder, productLinesPrice, transaction)
+		const productLinesWithPrices = await _getProductLinesWithPrices(req.body.products)
+		updatedOrder = await _getOrderWithShippingCostsAndPrice(updatedOrder, productLinesWithPrices)
+		updatedOrder = await _saveOrderWithProducts(updatedOrder, productLinesWithPrices, transaction)
 		await transaction.commit()
 		res.json(updatedOrder)
 	} catch (err) {
@@ -242,9 +207,9 @@ const destroy = async function (req, res) {
 		const result = await Order.destroy({ where: { id: req.params.orderId } })
 		let message = ''
 		if (result === 1) {
-			message = 'Successfuly deleted Order id.' + req.params.orderId
+			message = 'Sucessfuly deleted order id.' + req.params.orderId
 		} else {
-			message = 'Could not delete Order.'
+			message = 'Could not delete order.'
 		}
 		res.json(message)
 	} catch (err) {
