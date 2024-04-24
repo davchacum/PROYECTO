@@ -20,6 +20,7 @@ const loadFileRoutes = function (app) {
 			isLoggedIn,
 			hasRole('customer'),
 			OrderValidation.create,
+			OrderMiddleware.validateRestaurantId,
 			handleValidation,
 			OrderController.create
 		)

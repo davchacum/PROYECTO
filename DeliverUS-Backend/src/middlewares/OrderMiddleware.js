@@ -1,5 +1,19 @@
 import { Order, Restaurant } from '../models/models.js'
 
+const validateRestaurantId = async (req, res, next) => {
+	try {
+		const restaurantId = req.body.restaurantId
+
+		if (!Number.isInteger(Number(restaurantId))) {
+			return res.status(409).json({ error: 'El ID del restaurante debe ser un número entero' })
+		} else {
+			next()
+		}
+	} catch (err) {
+		return res.status(500).send(err)
+	}
+}
+
 // TODO: Implement the following function to check if the order belongs to current loggedIn customer (order.userId equals or not to req.user.id)
 const checkOrderCustomer = async (req, res, next) => {
 	try {
@@ -31,7 +45,7 @@ const checkRestaurantExists = async (req, res, next) => {
 		} else if (req.order.restaurant.id === order.restaurant.id) {
 			return next()
 		} else {
-			return res.status(404).send('Not found.The restaurant associated to this order does not exist')
+			return res.status(409).send('Not found.The restaurant associated to this order does not exist')
 		}
 	} catch (err) {
 		return res.status(500).send(err)
@@ -105,4 +119,4 @@ const checkOrderCanBeDelivered = async (req, res, next) => {
 	}
 }
 
-export { checkOrderOwnership, checkOrderCustomer, checkOrderVisible, checkOrderIsPending, checkOrderCanBeSent, checkOrderCanBeDelivered, checkRestaurantExists }
+export { checkOrderOwnership, checkOrderCustomer, checkOrderVisible, checkOrderIsPending, checkOrderCanBeSent, checkOrderCanBeDelivered, checkRestaurantExists, validateRestaurantId }
