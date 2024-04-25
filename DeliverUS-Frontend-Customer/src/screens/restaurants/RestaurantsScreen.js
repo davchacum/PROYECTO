@@ -76,11 +76,14 @@ export default function RestaurantsScreen ({ navigation, route }) {
 
   const renderPopularProducts = ({ item }) => {
     return (
-    <ImageCard
-      imageUri={item.image ? { uri: process.env.API_BASE_URL + '/' + item.image } : restaurantLogo}
-      title={item.name}
-    >
-    </ImageCard>)
+      <View style={styles.product}>
+        <ImageCard
+          imageUri={item.image ? { uri: process.env.API_BASE_URL + '/' + item.image } : restaurantLogo}
+          title={item.name}
+        >
+        </ImageCard>
+      </View>
+    )
   }
 
   const renderEmptyPopularProductsList = () => {
@@ -92,20 +95,24 @@ export default function RestaurantsScreen ({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
-      <FlatList
+    <View>
+      <View style={styles.popProducts}>
+        <FlatList
         horizontal={true}
         data={popularProducts}
         renderItem={renderPopularProducts}
         keyExtractor={item => item.id.toString()}
         ListEmptyComponent={renderEmptyPopularProductsList}
       />
-      <FlatList
+      </View>
+      <View style={styles.container}>
+        <FlatList
         data={restaurants}
         renderItem={renderRestaurant}
         keyExtractor={item => item.id.toString()}
         ListEmptyComponent={renderEmptyRestaurantsList}
       />
+      </View>
       {/* <Pressable Este es el boton de ir a los detalles de un restaurante
         onPress={() => {
           navigation.navigate('RestaurantDetailScreen', { id: 1 }) // TODO: Change this to the actual restaurant id as they are rendered as a FlatList
@@ -131,6 +138,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     margin: 50
+  },
+  popProducts: {
+    justifyContent: 'space-around',
+    alignItems: 'center'
+  },
+  product: {
+    marginLeft: 100,
+    marginRight: 100,
+    width: '75%'
   },
   button: {
     borderRadius: 8,
