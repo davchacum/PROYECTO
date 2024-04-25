@@ -64,8 +64,6 @@ export default function RestaurantsScreen ({ navigation, route }) {
         ListEmptyComponent={renderEmptyRestaurantsList}
       />
       <View style={styles.FRHeader}>
-        <TextSemiBold>FR1: Restaurants listing.</TextSemiBold>
-        <TextRegular>enable customers to navigate to restaurant details so they can create and place a new order</TextRegular>
         <TextSemiBold>FR7: Show top 3 products.</TextSemiBold>
         <TextRegular>Customers will be able to query top 3 products from all restaurants. Top products are the most popular ones, in other words the best sellers.</TextRegular>
       </View>
