@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, Pressable, FlatList } from 'react-native'
+import { StyleSheet, View, FlatList } from 'react-native'
 import TextSemiBold from '../../components/TextSemibold'
 import ImageCard from '../../components/ImageCard'
 import TextRegular from '../../components/TextRegular'
@@ -35,7 +35,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
         imageUri={item.logo ? { uri: process.env.API_BASE_URL + '/' + item.logo } : restaurantLogo}
         title={item.name}
         onPress={() => {
-          navigation.navigate('RestaurantsDetailScreen', { id: item.id })
+          navigation.navigate('RestaurantDetailScreen', { id: item.id })
         }}
       >
         <TextRegular numberOfLines={2}>{item.description}</TextRegular>
@@ -50,7 +50,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
   const renderEmptyRestaurantsList = () => {
     return (
       <TextRegular textStyle={styles.emptyList}>
-        Error unauthorized que no tengo ni idea
+        There was an error retrieving restaurants
       </TextRegular>
     )
   }
@@ -65,11 +65,11 @@ export default function RestaurantsScreen ({ navigation, route }) {
       />
       <View style={styles.FRHeader}>
         <TextSemiBold>FR1: Restaurants listing.</TextSemiBold>
-        <TextRegular>List restaurants and enable customers to navigate to restaurant details so they can create and place a new order</TextRegular>
+        <TextRegular>enable customers to navigate to restaurant details so they can create and place a new order</TextRegular>
         <TextSemiBold>FR7: Show top 3 products.</TextSemiBold>
         <TextRegular>Customers will be able to query top 3 products from all restaurants. Top products are the most popular ones, in other words the best sellers.</TextRegular>
       </View>
-      <Pressable
+      {/* <Pressable Este es el boton de ir a los detalles de un restaurante
         onPress={() => {
           navigation.navigate('RestaurantDetailScreen', { id: 1 }) // TODO: Change this to the actual restaurant id as they are rendered as a FlatList
         }}
@@ -83,7 +83,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
         ]}
       >
         <TextRegular textStyle={styles.text}>Go to Restaurant Detail Screen</TextRegular>
-      </Pressable>
+      </Pressable> */}
     </View>
   )
 }
