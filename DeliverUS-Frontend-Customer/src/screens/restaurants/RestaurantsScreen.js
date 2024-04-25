@@ -8,9 +8,11 @@ import restaurantLogo from '../../../assets/restaurantLogo.jpeg'
 import * as GlobalStyles from '../../styles/GlobalStyles'
 import { showMessage } from 'react-native-flash-message'
 import { getAllRestaurants } from '../../api/RestaurantEndpoints'
+import { getPopularProducts } from '../../api/ProductEndpoints'
 
 export default function RestaurantsScreen ({ navigation, route }) {
   const [restaurants, setRestaurants] = useState([])
+  const [popularProducts, setPopularProducts] = useState([])
 
   useEffect(() => {
     async function fetchRestaurants () {
@@ -27,6 +29,23 @@ export default function RestaurantsScreen ({ navigation, route }) {
       }
     }
     fetchRestaurants()
+  }, [route])
+
+  useEffect(() => {
+    async function fetchPopularProducts () {
+      try {
+        const fetchedPopularProducts = await getPopularProducts()
+        setPopularProducts(fetchedPopularProducts)
+      } catch (err) {
+        showMessage({
+          message: `There was an error while retrieving popular products. ${err} `,
+          type: 'error',
+          style: GlobalStyles.flashStyle,
+          titleStyle: GlobalStyles.flashTextStyle
+        })
+      }
+    }
+    fetchPopularProducts()
   }, [route])
 
   const renderRestaurant = ({ item }) => {
@@ -55,18 +74,38 @@ export default function RestaurantsScreen ({ navigation, route }) {
     )
   }
 
+  const renderPopularProducts = ({ item }) => {
+    return (
+    <ImageCard
+      imageUri={item.image ? { uri: process.env.API_BASE_URL + '/' + item.image } : restaurantLogo}
+      title={item.name}
+    >
+    </ImageCard>)
+  }
+
+  const renderEmptyPopularProductsList = () => {
+    return (
+      <TextRegular textStyle={styles.emptyList}>
+        There was an error retrieving popular products
+      </TextRegular>
+    )
+  }
+
   return (
     <View style={styles.container}>
+      <FlatList
+        horizontal={true}
+        data={popularProducts}
+        renderItem={renderPopularProducts}
+        keyExtractor={item => item.id.toString()}
+        ListEmptyComponent={renderEmptyPopularProductsList}
+      />
       <FlatList
         data={restaurants}
         renderItem={renderRestaurant}
         keyExtractor={item => item.id.toString()}
         ListEmptyComponent={renderEmptyRestaurantsList}
       />
-      <View style={styles.FRHeader}>
-        <TextSemiBold>FR7: Show top 3 products.</TextSemiBold>
-        <TextRegular>Customers will be able to query top 3 products from all restaurants. Top products are the most popular ones, in other words the best sellers.</TextRegular>
-      </View>
       {/* <Pressable Este es el boton de ir a los detalles de un restaurante
         onPress={() => {
           navigation.navigate('RestaurantDetailScreen', { id: 1 }) // TODO: Change this to the actual restaurant id as they are rendered as a FlatList
@@ -87,11 +126,6 @@ export default function RestaurantsScreen ({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  FRHeader: { // TODO: remove this style and the related <View>. Only for clarification purposes
-    justifyContent: 'center',
-    alignItems: 'left',
-    margin: 50
-  },
   container: {
     flex: 1,
     justifyContent: 'center',
