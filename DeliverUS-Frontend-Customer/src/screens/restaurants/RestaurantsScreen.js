@@ -7,18 +7,15 @@ import TextRegular from '../../components/TextRegular'
 import restaurantLogo from '../../../assets/restaurantLogo.jpeg'
 import * as GlobalStyles from '../../styles/GlobalStyles'
 import { showMessage } from 'react-native-flash-message'
-import { getAll } from '../../api/RestaurantEndpoints'
+import { getAllRestaurants } from '../../api/RestaurantEndpoints'
 
 export default function RestaurantsScreen ({ navigation, route }) {
   const [restaurants, setRestaurants] = useState([])
 
   useEffect(() => {
-    // TODO: Fetch all restaurants and set them to state.
-    //      Notice that it is not required to be logged in.
-
     async function fetchRestaurants () {
       try {
-        const fetchedRestaurants = await getAll()
+        const fetchedRestaurants = await getAllRestaurants()
         setRestaurants(fetchedRestaurants)
       } catch (err) {
         showMessage({
@@ -29,7 +26,6 @@ export default function RestaurantsScreen ({ navigation, route }) {
         })
       }
     }
-    // TODO: set restaurants to state
     fetchRestaurants()
   }, [route])
 
@@ -54,7 +50,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
   const renderEmptyRestaurantsList = () => {
     return (
       <TextRegular textStyle={styles.emptyList}>
-        No restaurants were retreived. Are you logged in?
+        Error unauthorized que no tengo ni idea
       </TextRegular>
     )
   }
