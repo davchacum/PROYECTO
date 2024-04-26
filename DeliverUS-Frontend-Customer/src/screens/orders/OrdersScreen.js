@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { StyleSheet, FlatList, Pressable, View } from 'react-native'
 
-import { getAllOrders, remove } from '../../api/OrderEnpoints'
+import { getAllOrders, removeOrderById } from '../../api/OrderEnpoints'
 import ImageCard from '../../components/ImageCard'
 import TextSemiBold from '../../components/TextSemibold'
 import TextRegular from '../../components/TextRegular'
@@ -82,7 +82,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
 
   const removeOrder = async (order) => {
     try {
-      await remove(order.id)
+      await removeOrderById(order.id)
       await fetchOrders()
       setOrderToBeDeleted(null)
       showMessage({
