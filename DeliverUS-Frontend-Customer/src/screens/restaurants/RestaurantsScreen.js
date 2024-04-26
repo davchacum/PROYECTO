@@ -84,7 +84,8 @@ export default function RestaurantsScreen ({ navigation, route }) {
             navigation.navigate('RestaurantDetailScreen', { id: item.restaurantId })
           }}
         >
-          <TextRegular numberOfLines={2}>{item.description}</TextRegular>
+          <TextSemiBold>Description: <TextRegular>{item.description}</TextRegular></TextSemiBold>
+          <TextSemiBold>price: <TextSemiBold textStyle={{ color: GlobalStyles.brandPrimary }}>{item.price}€</TextSemiBold></TextSemiBold>
         </ImageCard>
       </View>
     )
