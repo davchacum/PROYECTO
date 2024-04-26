@@ -1,16 +1,20 @@
-import React from 'react'
-import { useContext, StyleSheet, View, Pressable, FlatList, ImageCard, useEffect, useState } from 'react-native'
-import TextRegular from '../../components/TextRegular'
+/* eslint-disable react/prop-types */
+import React, { useContext, useEffect, useState } from 'react'
+import { StyleSheet, FlatList, Pressable, View } from 'react-native'
+
+import { getAllOrders, remove } from '../../api/RestaurantEndpoints'
+import ImageCard from '../../components/ImageCard'
 import TextSemiBold from '../../components/TextSemibold'
+import TextRegular from '../../components/TextRegular'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import * as GlobalStyles from '../../styles/GlobalStyles'
-import { brandPrimary, brandPrimaryTap } from '../../styles/GlobalStyles'
-import restaurantLogo from '../../../assets/restaurantLogo.jpeg'
-import { getAllOrders } from '../../api/OrderEnpoints'
 import { AuthorizationContext } from '../../context/AuthorizationContext'
 import { showMessage } from 'react-native-flash-message'
-export default function OrdersScreen ({ navigation, route }) {
+import DeleteModal from '../../components/DeleteModal'
+import restaurantLogo from '../../../assets/restaurantLogo.jpeg'
+
+export default function RestaurantsScreen ({ navigation, route }) {
   const [orders, setOrders] = useState([])
-  // const [orderToBeDeleted, setOrderToBeDeleted] = useState(null)
   const { loggedInUser } = useContext(AuthorizationContext)
 
   useEffect(() => {
@@ -19,29 +23,55 @@ export default function OrdersScreen ({ navigation, route }) {
     } else {
       setOrders(null)
     }
-  }, [loggedInUser, route, orders])
+  }, [loggedInUser, route])
 
-  const renderOrders = ({ item }) => {
+  const renderOrder = ({ item }) => {
     return (
-    <ImageCard
-      imageUri={item.logo ? { uri: process.env.API_BASE_URL + '/' + item.logo } : restaurantLogo}
-      title={item.name}
-      onPress={() => {
-        navigation.navigate('OrderDetailScreen', { id: item.id })
-      }}
-    >
-    </ImageCard>
+      <ImageCard
+        imageUri={item.logo ? { uri: process.env.API_BASE_URL + '/' + item.logo } : restaurantLogo}
+        title={item.name}
+        onPress={() => {
+          navigation.navigate('OrderDetailScreen', { id: item.id })
+        }}
+      >
+      </ImageCard>
     )
   }
 
-  const renderEmptyOrderList = () => {
+  const renderEmptyOrdersList = () => {
     return (
-    <TextRegular textStyle={styles.emptyList}>
-      No orders were retreived. Are you logged in?
-    </TextRegular>
+      <TextRegular textStyle={styles.emptyList}>
+        No orders were retreived. Are you logged in?
+      </TextRegular>
     )
   }
 
+  const renderHeader = () => {
+    return (
+      <>
+      {loggedInUser &&
+      <Pressable
+        onPress={() => navigation.navigate('CreateRestaurantScreen')
+        }
+        style={({ pressed }) => [
+          {
+            backgroundColor: pressed
+              ? GlobalStyles.brandGreenTap
+              : GlobalStyles.brandGreen
+          },
+          styles.button
+        ]}>
+        <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+          <MaterialCommunityIcons name='plus-circle' color={'white'} size={20}/>
+          <TextRegular textStyle={styles.text}>
+            Create restaurant
+          </TextRegular>
+        </View>
+      </Pressable>
+    }
+    </>
+    )
+  }
   const fetchOrders = async () => {
     try {
       const fetchedOrders = await getAllOrders()
@@ -58,64 +88,55 @@ export default function OrdersScreen ({ navigation, route }) {
 
   return (
     <>
-    {<FlatList
-      // style={styles.container}
-      // data={orders}
-      renderItem={renderOrders}
+    <FlatList
+      style={styles.button}
+      data={orders}
+      renderItem={renderOrder}
       keyExtractor={item => item.id.toString()}
-      ListEmptyComponent={renderEmptyOrderList}
-    />}
+      ListHeaderComponent={renderHeader}
+      ListEmptyComponent={renderEmptyOrdersList}
+    />
     </>
   )
-//   return (
-//     <View style={styles.container}>
-//       <View style={styles.FRHeader}>
-//         <TextSemiBold>FR5: Listing my confirmed orders</TextSemiBold>
-//         <TextRegular>A Customer will be able to check his/her confirmed orders, sorted from the most recent to the oldest.</TextRegular>
-//         <TextSemiBold>FR8: Edit/delete order</TextSemiBold>
-//         <TextRegular>If the order is in the state 'pending', the customer can edit or remove the products included or remove the whole order. The delivery address can also be modified in the state 'pending'. If the order is in the state 'sent' or 'delivered' no edition is allowed.</TextRegular>
-//       </View>
-//         <Pressable
-//             onPress={() => {
-//               navigation.navigate('OrderDetailScreen', { id: Math.floor(Math.random() * 100) })
-//             }}
-//             style={({ pressed }) => [
-//               {
-//                 backgroundColor: pressed
-//                   ? brandPrimaryTap
-//                   : brandPrimary
-//               },
-//               styles.button
-//             ]}
-//         >
-//             <TextRegular textStyle={styles.text}>Go to Order Detail Screen</TextRegular>
-//         </Pressable>
-//     </View>
-//   )
 }
 
 const styles = StyleSheet.create({
-  FRHeader: { // TODO: remove this style and the related <View>. Only for clarification purposes
-    justifyContent: 'center',
-    alignItems: 'left',
-    margin: 50
-  },
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 50
+    flex: 1
   },
   button: {
     borderRadius: 8,
     height: 40,
-    margin: 12,
+    marginTop: 12,
     padding: 10,
-    width: '100%'
+    alignSelf: 'center',
+    flexDirection: 'row',
+    width: '80%'
+  },
+  actionButton: {
+    borderRadius: 8,
+    height: 40,
+    marginTop: 12,
+    margin: '1%',
+    padding: 10,
+    alignSelf: 'center',
+    flexDirection: 'column',
+    width: '50%'
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    bottom: 5,
+    position: 'absolute',
+    width: '90%'
   },
   text: {
     fontSize: 16,
     color: 'white',
-    textAlign: 'center'
+    alignSelf: 'center',
+    marginLeft: 5
+  },
+  emptyList: {
+    textAlign: 'center',
+    padding: 50
   }
 })
