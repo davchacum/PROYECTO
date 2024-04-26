@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable } from 'react-native'
 import { showMessage } from 'react-native-flash-message'
 import { getDetail } from '../../api/RestaurantEndpoints'
@@ -9,11 +9,12 @@ import TextSemiBold from '../../components/TextSemibold'
 import * as GlobalStyles from '../../styles/GlobalStyles'
 import defaultProductImage from '../../../assets/product.jpeg'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { AuthorizationContext } from '../../context/AuthorizationContext'
 
 export default function RestaurantDetailScreen ({ navigation, route }) {
   const [restaurant, setRestaurant] = useState({})
   const [counts, setCount] = useState(new Map()) // Estado para el valor del botón del medio
-
+  const { loggedInUser } = useContext(AuthorizationContext)
   useEffect(() => {
     fetchRestaurantDetail()
   }, [route])
@@ -48,14 +49,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
   const renderHeader = () => {
     return (
       <View>
-        <View style={styles.FRHeader}>
-          <TextSemiBold>FR2: Restaurants details and menu.</TextSemiBold>
-          <TextRegular>Customers will be able to query restaurants details and the products offered by them.</TextRegular>
-          <TextSemiBold>FR3: Add, edit and remove products to a new order.</TextSemiBold>
-          <TextRegular>A customer can add several products, and several units of a product to a new order. Before confirming, customer can edit and remove products. Once the order is confirmed, it cannot be edited or removed.</TextRegular>
-          <TextSemiBold>FR4: Confirm or dismiss new order.</TextSemiBold>
-          <TextRegular>Customers will be able to confirm or dismiss the order before sending it to the backend.</TextRegular>
-        </View>
         <ImageBackground source={(restaurant?.heroImage) ? { uri: process.env.API_BASE_URL + '/' + restaurant.heroImage, cache: 'force-cache' } : undefined} style={styles.imageBackground}>
           <View style={styles.restaurantHeaderContainer}>
             <TextSemiBold textStyle={styles.textTitle}>{restaurant.name}</TextSemiBold>
@@ -64,16 +57,73 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
             <TextRegular textStyle={styles.description}>{restaurant.restaurantCategory ? restaurant.restaurantCategory.name : ''}</TextRegular>
           </View>
         </ImageBackground>
+        <Pressable
+          onPress={ () => {
+            if (!loggedInUser) {
+              showMessage({
+                message: 'If you want to place an order you must be logged in',
+                type: 'danger',
+                style: GlobalStyles.flashStyle,
+                titleStyle: GlobalStyles.flashTextStyle
+              })
+              navigation.navigate('Profile')
+            }
+          }}
+          style={({ pressed }) => [
+            {
+              backgroundColor: pressed
+                ? GlobalStyles.brandGreenTap
+                : GlobalStyles.brandGreen
+            },
+            styles.button
+          ]}>
+          <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='plus-circle' color={'white'} size={20} />
+            <TextRegular textStyle={styles.text}>
+              Create product
+            </TextRegular>
+          </View>
+        </Pressable>
+        <Pressable
+          onPress={ () => {
+            if (!loggedInUser) {
+              showMessage({
+                message: 'If you want delete an order you must be logged in',
+                type: 'danger',
+                style: GlobalStyles.flashStyle,
+                titleStyle: GlobalStyles.flashTextStyle
+              })
+              navigation.navigate('Profile')
+            }
+          }}
+          style={({ pressed }) => [
+            {
+              backgroundColor: pressed
+                ? GlobalStyles.brandPrimaryTap
+                : GlobalStyles.brandPrimary
+            },
+            styles.button
+          ]}>
+          <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='minus-circle' color={'white'} size={20} />
+            <TextRegular textStyle={styles.text}>
+              Delete product
+            </TextRegular>
+          </View>
+        </Pressable>
       </View>
+
     )
   }
 
   const renderProduct = ({ item }) => {
     return (
+
       <ImageCard
         imageUri={item.image ? { uri: process.env.API_BASE_URL + '/' + item.image } : defaultProductImage}
         title={item.name}
       >
+
         <TextRegular numberOfLines={2}>{item.description}</TextRegular>
         <TextSemiBold textStyle={styles.price}>{item.price.toFixed(2)}€</TextSemiBold>
         {!item.availability &&
@@ -145,6 +195,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
           ListEmptyComponent={renderEmptyProductsList}
           style={styles.container}
           data={restaurant.products}
+
           renderItem={renderProduct}
           keyExtractor={item => item.id.toString()}
         />
@@ -152,11 +203,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  FRHeader: { // TODO: remove this style and the related <View>. Only for clarification purposes
-    justifyContent: 'center',
-    alignItems: 'left',
-    margin: 50
-  },
   container: {
     flex: 1
   },
