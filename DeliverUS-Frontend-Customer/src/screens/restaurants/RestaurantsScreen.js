@@ -80,6 +80,9 @@ export default function RestaurantsScreen ({ navigation, route }) {
         <ImageCard
           imageUri={item.image ? { uri: process.env.API_BASE_URL + '/' + item.image } : restaurantLogo}
           title={item.name}
+          onPress={() => {
+            navigation.navigate('RestaurantDetailScreen', { id: item.restaurantId })
+          }}
         >
         </ImageCard>
       </View>
