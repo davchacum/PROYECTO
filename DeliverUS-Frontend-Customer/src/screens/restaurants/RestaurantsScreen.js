@@ -119,21 +119,6 @@ export default function RestaurantsScreen ({ navigation, route }) {
         ListEmptyComponent={renderEmptyRestaurantsList}
       />
       </View>
-      {/* <Pressable Este es el boton de ir a los detalles de un restaurante
-        onPress={() => {
-          navigation.navigate('RestaurantDetailScreen', { id: 1 }) // TODO: Change this to the actual restaurant id as they are rendered as a FlatList
-        }}
-        style={({ pressed }) => [
-          {
-            backgroundColor: pressed
-              ? GlobalStyles.brandPrimaryTap
-              : GlobalStyles.brandPrimary
-          },
-          styles.button
-        ]}
-      >
-        <TextRegular textStyle={styles.text}>Go to Restaurant Detail Screen</TextRegular>
-      </Pressable> */}
     </View>
   )
 }
