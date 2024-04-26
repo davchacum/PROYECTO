@@ -84,6 +84,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
             navigation.navigate('RestaurantDetailScreen', { id: item.restaurantId })
           }}
         >
+          <TextRegular numberOfLines={2}>{item.description}</TextRegular>
         </ImageCard>
       </View>
     )
@@ -148,8 +149,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 30,
-    width: '300%'
+    margin: 30
   },
   popProducts: {
     justifyContent: 'space-around',
