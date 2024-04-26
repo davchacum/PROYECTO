@@ -23,26 +23,16 @@ export default function EditProductScreen ({ navigation, route }) {
 
   const [initialProductValues, setInitialProductValues] = useState({ name: null, description: null, price: null, order: null, productCategoryId: null, availability: null, image: null })
   const validationSchema = yup.object().shape({
-    name: yup
-      .string()
-      .max(255, 'Name too long')
-      .required('Name is required'),
     price: yup
       .number()
       .positive('Please provide a positive price value')
       .required('Price is required'),
-    order: yup
+    address: yup
+      .string()
+      .required('address is required'),
+    shippingCosts: yup
       .number()
-      .nullable()
-      .positive('Please provide a positive order value')
-      .integer('Please provide an integer order value'),
-    availability: yup
-      .boolean(),
-    productCategoryId: yup
-      .number()
-      .positive()
-      .integer()
-      .required('Product category is required')
+      .notRequired()
   })
 
   useEffect(() => {
