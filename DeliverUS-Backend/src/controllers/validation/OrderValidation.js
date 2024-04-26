@@ -10,8 +10,8 @@ import { Product, Restaurant, Order } from '../../models/models.js'
 
 const checkRestaurantExists = async (value, { req }) => {
 	try {
-		const restaurant = await Restaurant.findByPk(req.body.restaurantId) // busco restaurante en la database
-		if (!restaurant) { // si no existe, lo rechaza
+		const restaurant = await Restaurant.findByPk(req.body.restaurantId)
+		if (!restaurant) {
 			return Promise.reject(new Error('The restaurantId does not exist.'))
 		} else { return Promise.resolve() }
 	} catch (err) {
@@ -21,17 +21,17 @@ const checkRestaurantExists = async (value, { req }) => {
 
 const checkProductsAvailability = async (value, { req }) => {
 	try {
-		const products = req.body.products // obtengo los productos
-		const productsids = products.map(product => product.productId) // mapeo por id
+		const products = req.body.products
+		const productsids = products.map(product => product.productId)
 		const allProducts = await Product.findAll(
 			{
 				where: {
 					id: productsids,
 					availability: true
 				}
-			}) // busca todos los productos de la database en los que availability es true y el id está en productsIds
+			})
 
-		if (allProducts.length !== req.body.products.length) { // si la longitudo de mi productos y la database son distintas,rechazo
+		if (allProducts.length !== req.body.products.length) {
 			return Promise.reject(new Error('At least one product is unavailable'))
 		} else {
 			return Promise.resolve()
@@ -43,14 +43,14 @@ const checkProductsAvailability = async (value, { req }) => {
 
 const checkProductsBelongToSameRestaurant = async (value, { req }) => {
 	try {
-	  const orderRestaurantId = parseInt(req.body.restaurantId) // obtengo el id del restaurante al que se realizan los pedidos
-	  const products = await Product.findAll({ // obtengo de la base de datos los productos
+	  const orderRestaurantId = parseInt(req.body.restaurantId)
+	  const products = await Product.findAll({
 			where: {
-		  id: req.body.products.map(p => p.productId) // mapeo por productoId
+		  id: req.body.products.map(p => p.productId)
 			},
-			attributes: ['restaurantId'] // tiene que contener el atributo restauranteId
+			attributes: ['restaurantId']
 	  })
-	  if (products.some(p => p.restaurantId !== orderRestaurantId)) { // busco si algun producto tiene diferente restaurantId
+	  if (products.some(p => p.restaurantId !== orderRestaurantId)) {
 			return Promise.reject(new Error('Products do not belong to the same restaurant'))
 	  } else {
 			return Promise.resolve()
@@ -81,16 +81,16 @@ const create = [
 
 const checkProductsBelongToOriginalRestaurant = async (value, { req }) => {
 	try {
-	  const order = await Order.findByPk(req.params.orderId) // obtengo el pedido
-	  const products = req.body.products // obtengo los productos
-	  const productsIds = products.map(product => product.productId) // mapeo por id
+	  const order = await Order.findByPk(req.params.orderId)
+	  const products = req.body.products
+	  const productsIds = products.map(product => product.productId)
 	  const productsDb = await Product.findAll({
 			where: {
 		  id: productsIds
 			},
 			attributes: ['restaurantId']
-	  })// busca todos los productos de la database en los que availability es true y el id está en productsIds de mi peticion
-	  if (productsDb.some(x => x.restaurantId !== order.restaurantId)) { // comprueba si algún producto de la base de datos tenga restaurantId diferente al de la peticion
+	  })
+	  if (productsDb.some(x => x.restaurantId !== order.restaurantId)) {
 			return Promise.reject(new Error('Products do not belong to the same restaurant'))
 	  } else {
 			return Promise.resolve()
@@ -102,7 +102,7 @@ const checkProductsBelongToOriginalRestaurant = async (value, { req }) => {
 
 const checkOrderIsPending = async (value, { req }) => {
 	try {
-	  const order = await Order.findByPk(req.params.orderId) // obtengo el pedido con id pasado por los parametros de mi peticion
+	  const order = await Order.findByPk(req.params.orderId)
 	  if (order.status === 'pending') { // compruebo que esté pendiente
 			return Promise.resolve()
 	  } else {
