@@ -98,8 +98,9 @@ export default function RestaurantsScreen ({ navigation, route }) {
   }
 
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.popProducts}>
+        <TextSemiBold style={styles.bigText}>Popular Products</TextSemiBold>
         <FlatList
         horizontal={true}
         data={popularProducts}
@@ -108,7 +109,8 @@ export default function RestaurantsScreen ({ navigation, route }) {
         ListEmptyComponent={renderEmptyPopularProductsList}
       />
       </View>
-      <View style={styles.container}>
+      <View style={styles.restaurants}>
+        <TextSemiBold style={styles.bigText}>Restaurants</TextSemiBold>
         <FlatList
         data={restaurants}
         renderItem={renderRestaurant}
@@ -140,11 +142,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 50
+    margin: 30
+  },
+  restaurants: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 30,
+    width: '300%'
   },
   popProducts: {
     justifyContent: 'space-around',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginTop: -20,
+    marginBottom: -10
   },
   product: {
     marginLeft: 100,
@@ -157,6 +168,11 @@ const styles = StyleSheet.create({
     margin: 12,
     padding: 10,
     width: '100%'
+  },
+  bigText: {
+    fontSize: 40,
+    color: 'black',
+    textAlign: 'center'
   },
   text: {
     fontSize: 16,
