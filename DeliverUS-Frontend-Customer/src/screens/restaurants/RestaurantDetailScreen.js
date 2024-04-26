@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, FlatList, ImageBackground, Image } from 'react-native'
+import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable } from 'react-native'
 import { showMessage } from 'react-native-flash-message'
 import { getDetail } from '../../api/RestaurantEndpoints'
 import ImageCard from '../../components/ImageCard'
@@ -8,13 +8,42 @@ import TextRegular from '../../components/TextRegular'
 import TextSemiBold from '../../components/TextSemibold'
 import * as GlobalStyles from '../../styles/GlobalStyles'
 import defaultProductImage from '../../../assets/product.jpeg'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 
 export default function RestaurantDetailScreen ({ navigation, route }) {
   const [restaurant, setRestaurant] = useState({})
+  const [counts, setCount] = useState(new Map()) // Estado para el valor del botón del medio
 
   useEffect(() => {
     fetchRestaurantDetail()
   }, [route])
+
+  const myValue = (id) => {
+    if (!counts.has(id)) {
+      const newCounts = new Map(counts)
+      newCounts.set(id, 0)
+      setCount(newCounts)
+    }
+    return counts.get(id)
+  }
+
+  const incrementCountById = (id) => {
+    const newCounts = new Map(counts)
+    newCounts.set(id, newCounts.get(id) + 1)
+    setCount(newCounts)
+
+    return newCounts.get(id)
+  }
+  const decrementCountById = (id) => {
+    if (counts.get(id) > 0) {
+      const newCounts = new Map(counts)
+      newCounts.set(id, newCounts.get(id) - 1)
+      setCount(newCounts)
+      return newCounts.get(id)
+    } else {
+      return 0
+    }
+  }
 
   const renderHeader = () => {
     return (
@@ -50,6 +79,40 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
         {!item.availability &&
           <TextRegular textStyle={styles.availability }>Not available</TextRegular>
         }
+        {item.availability && (
+          <View style={styles.actionButtonsContainer}>
+            <Pressable
+              onPress={() => decrementCountById(item.id)}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: pressed
+                    ? GlobalStyles.brandPrimaryTap
+                    : GlobalStyles.brandPrimary
+                },
+                styles.actionButton
+              ]}>
+              <View style={[{ flex: 200, flexDirection: 'row', justifyContent: 'center' }]}>
+                <MaterialCommunityIcons name='minus-circle' color={'white'} size={20}/>
+              </View>
+            </Pressable>
+            <View style={styles.quantity}>{myValue(item.id)}</View>
+            <Pressable
+              onPress={() => incrementCountById(item.id)}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: pressed
+                    ? GlobalStyles.brandGreenTap
+                    : GlobalStyles.brandGreen
+                },
+                styles.actionButton
+              ]}>
+              <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+                <MaterialCommunityIcons name='plus-circle' color={'white'} size={20}/>
+              </View>
+            </Pressable>
+          </View>
+        )}
+
       </ImageCard>
     )
   }
@@ -151,19 +214,40 @@ const styles = StyleSheet.create({
     color: GlobalStyles.brandSecondary
   },
   actionButton: {
-    borderRadius: 8,
+    borderRadius: 25,
     height: 40,
     marginTop: 12,
     margin: '1%',
     padding: 10,
     alignSelf: 'center',
     flexDirection: 'column',
-    width: '50%'
+    width: '3.5%'
   },
   actionButtonsContainer: {
     flexDirection: 'row',
     bottom: 5,
     position: 'absolute',
-    width: '90%'
+    width: '90%',
+    alignSelf: 'center',
+    marginTop: 30,
+    justifyContent: 'flex-end'
+  },
+  quantity: {
+    borderRadius: 10,
+    height: 40,
+    marginTop: 12,
+    margin: '0%',
+    padding: 10,
+    textAlign: 'center',
+    flexDirection: 'column',
+    width: '4%',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    backgroundColor: '#808080'
+
+  },
+  quantityContainer: {
+    alignItems: 'center' // Alinea el contenido horizontalmente
   }
 })
