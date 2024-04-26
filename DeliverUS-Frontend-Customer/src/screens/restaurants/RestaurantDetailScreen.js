@@ -86,8 +86,8 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
               style={({ pressed }) => [
                 {
                   backgroundColor: pressed
-                    ? GlobalStyles.brandPrimaryTap
-                    : GlobalStyles.brandPrimary
+                    ? '#808080'
+                    : '#808080'
                 },
                 styles.actionButton
               ]}>
@@ -101,8 +101,8 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
               style={({ pressed }) => [
                 {
                   backgroundColor: pressed
-                    ? GlobalStyles.brandGreenTap
-                    : GlobalStyles.brandGreen
+                    ? '#808080'
+                    : '#808080'
                 },
                 styles.actionButton
               ]}>
@@ -214,14 +214,14 @@ const styles = StyleSheet.create({
     color: GlobalStyles.brandSecondary
   },
   actionButton: {
-    borderRadius: 25,
+    borderRadius: 20,
     height: 40,
     marginTop: 12,
-    margin: '1%',
+    margin: '0%',
     padding: 10,
     alignSelf: 'center',
     flexDirection: 'column',
-    width: '3.5%'
+    width: '5%'
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -233,14 +233,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end'
   },
   quantity: {
-    borderRadius: 10,
+    borderRadius: 0,
     height: 40,
     marginTop: 12,
-    margin: '0%',
+    margin: '-1.4%',
     padding: 10,
     textAlign: 'center',
     flexDirection: 'column',
-    width: '4%',
+    width: '5%',
     fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
