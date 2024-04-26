@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
     marginBottom: -10
   },
   product: {
-    marginLeft: 100,
-    marginRight: 100,
-    width: '75%'
+    marginLeft: 35,
+    marginRight: 35,
+    width: 400
   },
   button: {
     borderRadius: 8,
