@@ -8,4 +8,8 @@ function removeOrderById (id) {
   return destroy(`orders/${id}`)
 }
 
-export { getAllOrders, removeOrderById }
+function getOrderDetails (id) {
+  return get(`orders/${id}`)
+}
+
+export { getAllOrders, removeOrderById, getOrderDetails }
