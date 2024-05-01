@@ -29,9 +29,13 @@ export default function OrderDetailScreen ({ navigation, route }) {
   const renderHeader = () => {
     return (
           <View style={styles.orderHeaderContainer}>
+            <ImageBackground source={(order.restaurant?.logo) ? { uri: process.env.API_BASE_URL + '/' + order.restaurant.logo, cache: 'force-cache' } : undefined}></ImageBackground>
             <TextSemiBold textStyle={styles.bigText}> YOUR ORDER #{order.id}</TextSemiBold>
-            <TextRegular textStyle={styles.smallText}>{order.price} €</TextRegular> {order.shippingCosts > 0 && <TextRegular textStyle={styles.smallText }>Shipping Costs = {order.shippingCosts} €</TextRegular>}
+            <TextRegular textStyle={styles.smallText}>Status: {order.status}</TextRegular>
+            <TextRegular textStyle={styles.smallText}>Price: {order.price} €</TextRegular> {order.shippingCosts > 0 && <TextRegular textStyle={styles.smallText }>Shipping Costs = {order.shippingCosts} €</TextRegular>}
             <TextRegular textStyle={styles.smallText}>Address: {order.address}</TextRegular>
+            <TextRegular textStyle={styles.smallText}>Ordered at: {order.createdAt}</TextRegular>
+
           </View>
 
     )
@@ -51,9 +55,8 @@ export default function OrderDetailScreen ({ navigation, route }) {
         imageUri={item.image ? { uri: process.env.API_BASE_URL + '/' + item.image } : defaultProductImage}
         title={item.name}
       >
-        {
           <TextRegular> {item.price} €</TextRegular>
-        }
+          <TextRegular> Quantity: {item.OrderProducts.quantity }</TextRegular>
       </ImageCard>
     )
   }
@@ -73,16 +76,26 @@ export default function OrderDetailScreen ({ navigation, route }) {
   }
   return (
     <View style={styles.container}>
-        <FlatList
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmptyOrderDetails}
-        data={order.products}
-        renderItem={renderProduct}
-        keyExtractor={item => item.id.toString()}
-      />
-    </View>
+    <FlatList
+    ListHeaderComponent={renderHeader}
+    ListEmptyComponent={renderEmptyOrderDetails}
+    data={order.products}
+    renderItem={renderProduct}
+    keyExtractor={item => item.id.toString()}
+  />
+</View>
   )
 }
+
+/* <View style={styles.restaurants}>
+        <TextSemiBold style={styles.bigText}>Restaurants</TextSemiBold>
+        <FlatList
+        data={restaurants}
+        renderItem={renderRestaurant}
+        keyExtractor={item => item.id.toString()}
+        ListEmptyComponent={renderEmptyRestaurantsList}
+      />
+      </View> */
 
 const styles = StyleSheet.create({
   FRHeader: { // TODO: remove this style and the related <View>. Only for clarification purposes
@@ -94,7 +107,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 50
+    margin: 80
   },
   smallText: {
     fontSize: 15,
