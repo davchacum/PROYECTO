@@ -45,6 +45,26 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       return 0
     }
   }
+  const deleteOrder = async () => {
+    if (Array.from(counts.values()).every(v => v === 0)) {
+      showMessage({
+        message: 'You must choose a product to delete your order',
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    } else {
+      const newCounts = new Map()
+      counts.forEach((clave, valor) => newCounts.set(clave, 0))
+      setCount(newCounts)
+      showMessage({
+        message: 'Your order has been deleted.',
+        type: 'success',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    }
+  }
 
   const renderHeader = () => {
     return (
@@ -80,7 +100,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
           <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
             <MaterialCommunityIcons name='plus-circle' color={'white'} size={20} />
             <TextRegular textStyle={styles.text}>
-              Create product
+              Create order
             </TextRegular>
           </View>
         </Pressable>
@@ -94,6 +114,8 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
                 titleStyle: GlobalStyles.flashTextStyle
               })
               navigation.navigate('Profile')
+            } else {
+              deleteOrder()
             }
           }}
           style={({ pressed }) => [
@@ -107,7 +129,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
           <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
             <MaterialCommunityIcons name='minus-circle' color={'white'} size={20} />
             <TextRegular textStyle={styles.text}>
-              Delete product
+              Delete order
             </TextRegular>
           </View>
         </Pressable>
