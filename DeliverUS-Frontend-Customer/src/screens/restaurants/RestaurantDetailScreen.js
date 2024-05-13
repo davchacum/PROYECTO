@@ -277,6 +277,16 @@ const styles = StyleSheet.create({
     marginLeft: 5
   },
   availability: {
+    margin: '0%',
+    padding: 10,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    position: 'absolute',
+    width: '90%',
+    marginTop: 30,
+    justifyContent: 'flex-end',
+    fontStyle: 'bold',
+    fontSize: 20,
     textAlign: 'right',
     marginRight: 5,
     color: GlobalStyles.brandSecondary
