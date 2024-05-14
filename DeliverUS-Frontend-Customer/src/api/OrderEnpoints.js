@@ -1,21 +1,23 @@
-import { destroy, get, post, put } from './helpers/ApiRequestsHelper'
+import { get, post, destroy, put } from './helpers/ApiRequestsHelper'
 
-function getAllOrders () {
-  return get('/orders')
+function getAll () {
+  return get('orders')
 }
 
-function removeOrderById (id) {
+function getOrderDetail (id) {
+  return get(`orders/${id}`)
+}
+
+function create (data) {
+  return post('orders', data)
+}
+
+function remove (id) {
   return destroy(`orders/${id}`)
 }
 
-function getOrderDetails (id) {
-  return get(`orders/${id}`)
-}
-function createOrder (data) {
-  return post('/orders', data)
-}
-function updateOrder (id, data) {
-  return put(`/orders/${id}`, data)
+function update (id, data) {
+  return put(`orders/${id}`, data)
 }
 
-export { getAllOrders, removeOrderById, getOrderDetails, createOrder, updateOrder }
+export { getAll, getOrderDetail, create, remove, update }
