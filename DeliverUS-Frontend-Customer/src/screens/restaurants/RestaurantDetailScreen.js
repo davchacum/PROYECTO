@@ -10,7 +10,7 @@ import * as GlobalStyles from '../../styles/GlobalStyles'
 import defaultProductImage from '../../../assets/product.jpeg'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { AuthorizationContext } from '../../context/AuthorizationContext'
-import { create } from '../../api/OrderEndpoints'
+// import { create } from '../../api/OrderEndpoints'
 
 export default function RestaurantDetailScreen ({ navigation, route }) {
   const [restaurant, setRestaurant] = useState({})
