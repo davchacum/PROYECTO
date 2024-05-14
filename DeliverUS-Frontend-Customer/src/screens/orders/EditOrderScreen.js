@@ -1,240 +1,248 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react'
-import { Image, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native'
-import * as ExpoImagePicker from 'expo-image-picker'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
-import InputItem from '../../components/InputItem'
-import TextRegular from '../../components/TextRegular'
-import * as GlobalStyles from '../../styles/GlobalStyles'
-import defaultProductImage from '../../../assets/product.jpeg'
+import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable } from 'react-native'
 import { showMessage } from 'react-native-flash-message'
-import DropDownPicker from 'react-native-dropdown-picker'
-import * as yup from 'yup'
-import { ErrorMessage, Formik } from 'formik'
-import TextError from '../../components/TextError'
-import { getProductCategories, getDetail, update } from '../../api/ProductEndpoints'
-import { prepareEntityImages } from '../../api/helpers/FileUploadHelper'
-import { buildInitialValues } from '../Helper'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { getDetail } from '../../api/RestaurantEndpoints'
+import { remove } from '../../api/ProductEndpoints'
+import ImageCard from '../../components/ImageCard'
+import TextRegular from '../../components/TextRegular'
+import TextSemiBold from '../../components/TextSemibold'
+import * as GlobalStyles from '../../styles/GlobalStyles'
+import DeleteModal from '../../components/DeleteModal'
+import defaultProductImage from '../../../assets/product.jpeg'
 
-export default function EditProductScreen ({ navigation, route }) {
-  const [open, setOpen] = useState(false)
-  const [productCategories, setProductCategories] = useState([])
-  const [backendErrors, setBackendErrors] = useState()
-  const [product, setProduct] = useState({})
-
-  const [initialProductValues, setInitialProductValues] = useState({ name: null, description: null, price: null, order: null, productCategoryId: null, availability: null, image: null })
-  const validationSchema = yup.object().shape({
-    price: yup
-      .number()
-      .positive('Please provide a positive price value')
-      .required('Price is required'),
-    address: yup
-      .string()
-      .required('address is required'),
-    shippingCosts: yup
-      .number()
-      .notRequired()
-  })
+export default function RestaurantDetailScreen ({ navigation, route }) {
+  const [restaurant, setRestaurant] = useState({})
+  const [productToBeDeleted, setProductToBeDeleted] = useState(null)
 
   useEffect(() => {
-    async function fetchProductCategories () {
-      try {
-        const fetchedProductCategories = await getProductCategories()
-        const fetchedProductCategoriesReshaped = fetchedProductCategories.map((e) => {
-          return {
-            label: e.name,
-            value: e.id
-          }
-        })
-        setProductCategories(fetchedProductCategoriesReshaped)
-      } catch (error) {
-        showMessage({
-          message: `There was an error while retrieving product categories. ${error} `,
-          type: 'error',
-          style: GlobalStyles.flashStyle,
-          titleStyle: GlobalStyles.flashTextStyle
-        })
-      }
-    }
-    fetchProductCategories()
-  }, [])
-
-  useEffect(() => {
-    async function fetchProductDetail () {
-      try {
-        const fetchedProduct = await getDetail(route.params.id)
-        const preparedProduct = prepareEntityImages(fetchedProduct, ['image'])
-        setProduct(preparedProduct)
-        const initialValues = buildInitialValues(preparedProduct, initialProductValues)
-        setInitialProductValues(initialValues)
-      } catch (error) {
-        showMessage({
-          message: `There was an error while retrieving product details (id ${route.params.id}). ${error}`,
-          type: 'error',
-          style: GlobalStyles.flashStyle,
-          titleStyle: GlobalStyles.flashTextStyle
-        })
-      }
-    }
-    fetchProductDetail()
+    fetchRestaurantDetail()
   }, [route])
-  const pickImage = async (onSuccess) => {
-    const result = await ExpoImagePicker.launchImageLibraryAsync({
-      mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1
-    })
-    if (!result.canceled) {
-      if (onSuccess) {
-        onSuccess(result)
-      }
+
+  const renderHeader = () => {
+    return (
+      <View>
+        <ImageBackground source={(restaurant?.heroImage) ? { uri: process.env.API_BASE_URL + '/' + restaurant.heroImage, cache: 'force-cache' } : undefined} style={styles.imageBackground}>
+          <View style={styles.restaurantHeaderContainer}>
+            <TextSemiBold textStyle={styles.textTitle}>{restaurant.name}</TextSemiBold>
+            <Image style={styles.image} source={restaurant.logo ? { uri: process.env.API_BASE_URL + '/' + restaurant.logo, cache: 'force-cache' } : undefined} />
+            <TextRegular textStyle={styles.description}>{restaurant.description}</TextRegular>
+            <TextRegular textStyle={styles.description}>{restaurant.restaurantCategory ? restaurant.restaurantCategory.name : ''}</TextRegular>
+          </View>
+        </ImageBackground>
+
+        <Pressable
+          onPress={() => navigation.navigate('CreateProductScreen', { id: restaurant.id })
+          }
+          style={({ pressed }) => [
+            {
+              backgroundColor: pressed
+                ? GlobalStyles.brandGreenTap
+                : GlobalStyles.brandGreen
+            },
+            styles.button
+          ]}>
+          <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='plus-circle' color={'white'} size={20} />
+            <TextRegular textStyle={styles.text}>
+              Create product
+            </TextRegular>
+          </View>
+        </Pressable>
+      </View>
+    )
+  }
+
+  const renderProduct = ({ item }) => {
+    return (
+      <ImageCard
+        imageUri={item.image ? { uri: process.env.API_BASE_URL + '/' + item.image } : defaultProductImage}
+        title={item.name}
+      >
+        <TextRegular numberOfLines={2}>{item.description}</TextRegular>
+        <TextSemiBold textStyle={styles.price}>{item.price.toFixed(2)}€</TextSemiBold>
+        {!item.availability &&
+          <TextRegular textStyle={styles.availability }>Not available</TextRegular>
+        }
+         <View style={styles.actionButtonsContainer}>
+          <Pressable
+            onPress={() => navigation.navigate('EditProductScreen', { id: item.id })
+            }
+            style={({ pressed }) => [
+              {
+                backgroundColor: pressed
+                  ? GlobalStyles.brandBlueTap
+                  : GlobalStyles.brandBlue
+              },
+              styles.actionButton
+            ]}>
+          <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='pencil' color={'white'} size={20}/>
+            <TextRegular textStyle={styles.text}>
+              Edit
+            </TextRegular>
+          </View>
+        </Pressable>
+
+        <Pressable
+            onPress={() => { setProductToBeDeleted(item) }}
+            style={({ pressed }) => [
+              {
+                backgroundColor: pressed
+                  ? GlobalStyles.brandPrimaryTap
+                  : GlobalStyles.brandPrimary
+              },
+              styles.actionButton
+            ]}>
+          <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+            <MaterialCommunityIcons name='delete' color={'white'} size={20}/>
+            <TextRegular textStyle={styles.text}>
+              Delete
+            </TextRegular>
+          </View>
+        </Pressable>
+        </View>
+      </ImageCard>
+    )
+  }
+
+  const renderEmptyProductsList = () => {
+    return (
+      <TextRegular textStyle={styles.emptyList}>
+        This restaurant has no products yet.
+      </TextRegular>
+    )
+  }
+
+  const fetchRestaurantDetail = async () => {
+    try {
+      const fetchedRestaurant = await getDetail(route.params.id)
+      setRestaurant(fetchedRestaurant)
+    } catch (error) {
+      showMessage({
+        message: `There was an error while retrieving restaurant details (id ${route.params.id}). ${error}`,
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
     }
   }
 
-  const updateProduct = async (values) => {
-    setBackendErrors([])
+  const removeProduct = async (product) => {
     try {
-      const updatedProduct = await update(product.id, values)
+      await remove(product.id)
+      await fetchRestaurantDetail()
+      setProductToBeDeleted(null)
       showMessage({
-        message: `Product ${updatedProduct.name} succesfully updated`,
+        message: `Product ${product.name} succesfully removed`,
         type: 'success',
         style: GlobalStyles.flashStyle,
         titleStyle: GlobalStyles.flashTextStyle
       })
-      navigation.navigate('RestaurantDetailScreen', { id: product.restaurantId })
     } catch (error) {
       console.log(error)
-      setBackendErrors(error.errors)
+      setProductToBeDeleted(null)
+      showMessage({
+        message: `Product ${product.name} could not be removed.`,
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
     }
   }
+
   return (
-    <Formik
-      enableReinitialize
-      validationSchema={validationSchema}
-      initialValues={initialProductValues}
-      onSubmit={updateProduct}>
-      {({ handleSubmit, setFieldValue, values }) => (
-        <ScrollView>
-          <View style={{ alignItems: 'center' }}>
-            <View style={{ width: '60%' }}>
-              <InputItem
-                name='name'
-                label='Name:'
-              />
-              <InputItem
-                name='description'
-                label='Description:'
-              />
-              <InputItem
-                name='price'
-                label='Price:'
-              />
-              <InputItem
-                name='order'
-                label='Order/position to be rendered:'
-              />
-
-              <DropDownPicker
-                open={open}
-                value={values.productCategoryId}
-                items={productCategories}
-                setOpen={setOpen}
-                onSelectItem={item => {
-                  setFieldValue('productCategoryId', item.value)
-                }}
-                setItems={setProductCategories}
-                placeholder="Select the product category"
-                containerStyle={{ height: 40, marginTop: 20, marginBottom: 20 }}
-                style={{ backgroundColor: GlobalStyles.brandBackground }}
-                dropDownStyle={{ backgroundColor: '#fafafa' }}
-              />
-              <ErrorMessage name={'productCategoryId'} render={msg => <TextError>{msg}</TextError> }/>
-
-              <TextRegular>Is it available?</TextRegular>
-              <Switch
-                trackColor={{ false: GlobalStyles.brandSecondary, true: GlobalStyles.brandPrimary }}
-                thumbColor={values.availability ? GlobalStyles.brandSecondary : '#f4f3f4'}
-                // onValueChange={toggleSwitch}
-                value={values.availability}
-                style={styles.switch}
-                onValueChange={value =>
-                  setFieldValue('availability', value)
-                }
-              />
-              <ErrorMessage name={'availability'} render={msg => <TextError>{msg}</TextError> }/>
-
-              <Pressable onPress={() =>
-                pickImage(
-                  async result => {
-                    await setFieldValue('image', result)
-                  }
-                )
-              }
-                style={styles.imagePicker}
-              >
-                <TextRegular>Product image: </TextRegular>
-                <Image style={styles.image} source={values.image ? { uri: values.image.assets[0].uri } : defaultProductImage} />
-              </Pressable>
-
-              {backendErrors &&
-                backendErrors.map((error, index) => <TextError key={index}>{error.param}-{error.msg}</TextError>)
-              }
-
-              <Pressable
-                onPress={ handleSubmit }
-                style={({ pressed }) => [
-                  {
-                    backgroundColor: pressed
-                      ? GlobalStyles.brandSuccessTap
-                      : GlobalStyles.brandSuccess
-                  },
-                  styles.button
-                ]}>
-                <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
-                  <MaterialCommunityIcons name='content-save' color={'white'} size={20}/>
-                  <TextRegular textStyle={styles.text}>
-                    Save
-                  </TextRegular>
-                </View>
-              </Pressable>
-            </View>
-          </View>
-        </ScrollView>
-      )}
-    </Formik>
+    <View style={styles.container}>
+      <FlatList
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmptyProductsList}
+        style={styles.container}
+        data={restaurant.products}
+        renderItem={renderProduct}
+        keyExtractor={item => item.id.toString()}
+      />
+      <DeleteModal
+        isVisible={productToBeDeleted !== null}
+        onCancel={() => setProductToBeDeleted(null)}
+        onConfirm={() => removeProduct(productToBeDeleted)}>
+          <TextRegular>If the product belong to some order, it cannot be deleted.</TextRegular>
+      </DeleteModal>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1
+  },
+  row: {
+    padding: 15,
+    marginBottom: 5,
+    backgroundColor: GlobalStyles.brandSecondary
+  },
+  restaurantHeaderContainer: {
+    height: 250,
+    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    flexDirection: 'column',
+    alignItems: 'center'
+  },
+  imageBackground: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center'
+  },
+  image: {
+    height: 100,
+    width: 100,
+    margin: 10
+  },
+  description: {
+    color: 'white'
+  },
+  textTitle: {
+    fontSize: 20,
+    color: 'white'
+  },
+  emptyList: {
+    textAlign: 'center',
+    padding: 50
+  },
   button: {
     borderRadius: 8,
     height: 40,
+    marginTop: 12,
     padding: 10,
-    width: '100%',
-    marginTop: 20,
-    marginBottom: 20
+    alignSelf: 'center',
+    flexDirection: 'row',
+    width: '80%'
   },
   text: {
     fontSize: 16,
     color: 'white',
-    textAlign: 'center',
-    marginLeft: 5
-
-  },
-  imagePicker: {
-    height: 40,
-    paddingLeft: 10,
-    marginTop: 20,
-    marginBottom: 80
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderWidth: 1,
     alignSelf: 'center',
-    marginTop: 5
+    marginLeft: 5
   },
-  switch: {
-    marginTop: 5
+  availability: {
+    textAlign: 'right',
+    marginRight: 5,
+    color: GlobalStyles.brandSecondary
+  },
+  actionButton: {
+    borderRadius: 8,
+    height: 40,
+    marginTop: 12,
+    margin: '1%',
+    padding: 10,
+    alignSelf: 'center',
+    flexDirection: 'column',
+    width: '50%'
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    bottom: 5,
+    position: 'absolute',
+    width: '90%'
   }
 })
