@@ -41,7 +41,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
         {item.status === 'pending' &&
         <View style={styles.actionButtonsContainer}>
           <Pressable
-           onPress={() => navigation.navigate('EditOrderScreen', { orderId: item.id, id: item.restaurant.id })}
+           onPress={() => navigation.navigate('EditOrderScreen', { orderId: item.id })}
             style={({ pressed }) => [
               {
                 backgroundColor: pressed
@@ -57,7 +57,6 @@ export default function RestaurantsScreen ({ navigation, route }) {
               </TextRegular>
             </View>
           </Pressable>
-
           <Pressable
             onPress={() => { setOrderToBeDeleted(item) }}
             style={({ pressed }) => [

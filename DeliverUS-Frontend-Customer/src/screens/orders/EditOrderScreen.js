@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable } from 'react-native'
 import { showMessage } from 'react-native-flash-message'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { getDetail } from '../../api/RestaurantEndpoints'
+import { getAllOrders } from '../../api/OrderEnpoints'
 import { remove } from '../../api/ProductEndpoints'
 import ImageCard from '../../components/ImageCard'
 import TextRegular from '../../components/TextRegular'
@@ -13,11 +13,11 @@ import DeleteModal from '../../components/DeleteModal'
 import defaultProductImage from '../../../assets/product.jpeg'
 
 export default function RestaurantDetailScreen ({ navigation, route }) {
-  const [restaurant, setRestaurant] = useState({})
+  const [restaurant, setOrders] = useState({})
   const [productToBeDeleted, setProductToBeDeleted] = useState(null)
 
   useEffect(() => {
-    fetchRestaurantDetail()
+    fetchOrders()
   }, [route])
 
   const renderHeader = () => {
@@ -115,13 +115,13 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
     )
   }
 
-  const fetchRestaurantDetail = async () => {
+  const fetchOrders = async () => {
     try {
-      const fetchedRestaurant = await getDetail(route.params.id)
-      setRestaurant(fetchedRestaurant)
+      const fetchedOrders = await getAllOrders()
+      setOrders(fetchedOrders)
     } catch (error) {
       showMessage({
-        message: `There was an error while retrieving restaurant details (id ${route.params.id}). ${error}`,
+        message: `There was an error while retrieving orders. ${error} `,
         type: 'error',
         style: GlobalStyles.flashStyle,
         titleStyle: GlobalStyles.flashTextStyle
@@ -132,7 +132,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
   const removeProduct = async (product) => {
     try {
       await remove(product.id)
-      await fetchRestaurantDetail()
+      await fetchOrders()
       setProductToBeDeleted(null)
       showMessage({
         message: `Product ${product.name} succesfully removed`,
