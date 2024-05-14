@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable, BackHandler } from 'react-native'
+import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable } from 'react-native'
 import TextRegular from '../../components/TextRegular'
 import TextSemiBold from '../../components/TextSemibold'
 import OrdersScreen from './OrdersScreen'
@@ -8,8 +8,9 @@ import { showMessage } from 'react-native-flash-message'
 // import { getAllOrders } from '../../api/OrderEnpoints'
 import * as GlobalStyles from '../../styles/GlobalStyles'
 import { getOrderDetails } from '../../api/OrderEnpoints'
+import DeleteModal from '../../components/DeleteModal'
 
-import { getDetail } from '../../api/RestaurantEndpoints'
+// import { getDetail } from '../../api/RestaurantEndpoints'
 import ImageCard from '../../components/ImageCard'
 
 import defaultProductImage from '../../../assets/product.jpeg'
@@ -21,6 +22,8 @@ export default function OrderDetailScreen ({ navigation, route }) {
   // }, [route])
 
   const [order, setOrder] = useState({})
+
+  const [orderToBeDeleted, setOrderToBeDeleted] = useState(null)
 
   useEffect(() => {
     fetchOrderDetail()
@@ -64,6 +67,43 @@ export default function OrderDetailScreen ({ navigation, route }) {
             <TextRegular textStyle={styles.smallText}>Ordered at: {renderFechaHora(order.createdAt)}</TextRegular>
           </View>
         </ImageBackground>
+        {order.status === 'pending' &&
+        <View style={styles.actionButtonsContainer}>
+          <Pressable
+           onPress={() => navigation.navigate('EditOrderScreen', { orderId: order.id })}
+            style={({ pressed }) => [
+              {
+                backgroundColor: pressed
+                  ? GlobalStyles.brandBlueTap
+                  : GlobalStyles.brandBlue
+              },
+              styles.actionButton
+            ]}>
+            <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+              <MaterialCommunityIcons name='pencil' color={'white'} size={20}/>
+              <TextRegular textStyle={styles.smallText}>
+                Edit
+              </TextRegular>
+            </View>
+          </Pressable>
+          <Pressable
+            onPress={() => { setOrderToBeDeleted(order) }}
+            style={({ pressed }) => [
+              {
+                backgroundColor: pressed
+                  ? GlobalStyles.brandPrimaryTap
+                  : GlobalStyles.brandPrimary
+              },
+              styles.actionButton
+            ]}>
+            <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+              <MaterialCommunityIcons name='delete' color={'white'} size={20}/>
+              <TextRegular textStyle={styles.smallText}>
+                Delete
+              </TextRegular>
+            </View>
+          </Pressable>
+        </View>}
       </View>
     )
   }
@@ -112,13 +152,21 @@ export default function OrderDetailScreen ({ navigation, route }) {
     }
   }
   return (
+  <>
     <FlatList
-    ListEmptyComponent={renderEmptyOrderDetails}
-    data={order.products}
-    renderItem={renderProduct}
-    keyExtractor={item => item.id.toString()}
-    ListHeaderComponent={renderHeader}
-  />
+      ListEmptyComponent={renderEmptyOrderDetails}
+      data={order.products}
+      renderItem={renderProduct}
+      keyExtractor={item => item.id.toString()}
+      ListHeaderComponent={renderHeader}
+    />
+    <DeleteModal
+      isVisible={orderToBeDeleted !== null}
+      onCancel={() => setOrderToBeDeleted(null)}
+      onConfirm={() => OrdersScreen.removeOrder(orderToBeDeleted)}>
+      <TextRegular>The order will be cancelled</TextRegular>
+    </DeleteModal>
+  </>
   )
 }
 
@@ -150,6 +198,26 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  actionButton: {
+    borderRadius: 8,
+    height: 40,
+    marginTop: 8,
+    margin: '1%',
+    padding: 10,
+    alignSelf: 'center',
+    flexDirection: 'column',
+    width: '20%'
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    bottom: 5,
+    position: 'relative',
+    width: '90%',
+    height: '35%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center'
   },
   restaurantNameStyle: {
     fontSize: 18,
