@@ -27,14 +27,38 @@ export default function OrderDetailScreen ({ navigation, route }) {
   }, [route])
 
   const renderHeader = () => {
+    const getStatusStyle = (status) => {
+      let textShadowColor
+      switch (status) {
+        case 'in process':
+          textShadowColor = GlobalStyles.brandSecondary
+          break
+        case 'sent':
+          textShadowColor = GlobalStyles.brandGreen
+          break
+        case 'delivered':
+          textShadowColor = 'blue'
+          break
+        default:
+          textShadowColor = GlobalStyles.brandPrimary
+      }
+      return {
+        textShadowColor,
+        textShadowOffset: { width: 1.5, height: -1.5 },
+        textShadowRadius: 1
+      }
+    }
+
     return (
         <View>
         <ImageBackground source={(order.restaurant?.logo) ? { uri: process.env.API_BASE_URL + '/' + order.restaurant.logo, cache: 'force-cache' } : undefined}>
           <View style={styles.orderHeaderContainer}>
             <TextSemiBold textStyle={styles.restaurantNameStyle}>{(order.restaurant?.name) ? order.restaurant.name : 'Restaurante Name'}</TextSemiBold>
             <Image source={(order.restaurant?.logo) ? { uri: process.env.API_BASE_URL + '/' + order.restaurant.logo, cache: 'force-cache' } : undefined} />
-            <TextSemiBold textStyle={styles.bigText}> YOUR ORDER #{order.id}</TextSemiBold>
-            <TextRegular textStyle={styles.smallText}>Status: <TextSemiBold textStyle={order.status === 'in process' ? { color: GlobalStyles.brandSecondary, borderColor: 'white' } : order.status === 'sent' ? { color: GlobalStyles.brandGreen, borderColor: 'white' } : order.status === 'delivered' ? { color: 'blue', borderColor: 'white' } : { color: GlobalStyles.brandPrimary }}>{order.status}</TextSemiBold></TextRegular>
+            <TextSemiBold textStyle={styles.orderIdStyle}> YOUR ORDER #{order.id}</TextSemiBold>
+            <TextRegular textStyle={styles.smallText}> Status: {''}
+              <TextRegular style={[styles.smallText, getStatusStyle(order.status)]}>{order.status}</TextRegular>
+            </TextRegular>
             <TextRegular textStyle={styles.smallText}>Price: {order.price} €</TextRegular> {order.shippingCosts > 0 && <TextRegular textStyle={styles.smallText }>Shipping Costs = {order.shippingCosts} €</TextRegular>}
             <TextRegular textStyle={styles.smallText}>Address: {order.address}</TextRegular>
             <TextRegular textStyle={styles.smallText}>Ordered at: {renderFechaHora(order.createdAt)}</TextRegular>
@@ -93,21 +117,10 @@ export default function OrderDetailScreen ({ navigation, route }) {
     data={order.products}
     renderItem={renderProduct}
     keyExtractor={item => item.id.toString()}
-        ListHeaderComponent={renderHeader}
-
+    ListHeaderComponent={renderHeader}
   />
   )
 }
-
-/* <View style={styles.restaurants}>
-        <TextSemiBold style={styles.bigText}>Restaurants</TextSemiBold>
-        <FlatList
-        data={restaurants}
-        renderItem={renderRestaurant}
-        keyExtractor={item => item.id.toString()}
-        ListEmptyComponent={renderEmptyRestaurantsList}
-      />
-      </View> */
 
 const styles = StyleSheet.create({
   container: {
@@ -120,7 +133,7 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'left'
   },
-  bigText: {
+  orderIdStyle: {
     fontSize: 40,
     color: 'white',
     textAlign: 'center'
@@ -130,14 +143,6 @@ const styles = StyleSheet.create({
     marginRight: 100,
     width: '75%'
   },
-  // orderHeaderContainer: {
-  //   height: 10,
-  //   padding: 80,
-  //   backgroundColor: 'rgba(0,0,0,0.5)',
-  //   flexDirection: 'column',
-  //   alignItems: 'center',
-  //   marginBottom: 55
-  // },
   orderHeaderContainer: {
     height: 250,
     padding: 20,
