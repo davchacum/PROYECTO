@@ -10,11 +10,16 @@ import * as GlobalStyles from '../../styles/GlobalStyles'
 import defaultProductImage from '../../../assets/product.jpeg'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { AuthorizationContext } from '../../context/AuthorizationContext'
+// import { create } from '../../api/OrderEndpoints'
 
 export default function RestaurantDetailScreen ({ navigation, route }) {
   const [restaurant, setRestaurant] = useState({})
+  const [direccion, setDireccion] = useState('')
   const [counts, setCount] = useState(new Map()) // Estado para el valor del botón del medio
   const { loggedInUser } = useContext(AuthorizationContext)
+
+  const [orderToBeConfirmed, setOrderToBeConfirmed] = useState(null)
+
   useEffect(() => {
     fetchRestaurantDetail()
   }, [route])
@@ -45,11 +50,43 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       return 0
     }
   }
+
+  const confirmOrder = async () => {
+    try {
+      if (Array.from(counts.values()).every(v => v === 0)) {
+        showMessage({
+          message: 'You must choose a product to create your order',
+          type: 'warning',
+          style: GlobalStyles.flashStyle,
+          titleStyle: GlobalStyles.flashTextStyle
+        })
+      } else {
+        const productQuantity = [...counts].map(([productId, quantity]) => ({ productId, quantity }))
+          .filter(element => element.quantity > 0)
+        const values = { address: direccion, restaurantId: restaurant.id, products: productQuantity }
+        await setOrderToBeConfirmed(values)
+        if (typeof create === 'function') {
+          await create(orderToBeConfirmed)
+        } else {
+          console.error('Error: create function is not defined')
+        }
+      }
+    } catch (error) {
+      console.error('Error while creating order:', error)
+      showMessage({
+        message: `There was an error while creating the order. ${error}`,
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    }
+  }
+
   const deleteOrder = async () => {
     if (Array.from(counts.values()).every(v => v === 0)) {
       showMessage({
         message: 'You must choose a product to delete your order',
-        type: 'error',
+        type: 'warning',
         style: GlobalStyles.flashStyle,
         titleStyle: GlobalStyles.flashTextStyle
       })
@@ -87,6 +124,8 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
                 titleStyle: GlobalStyles.flashTextStyle
               })
               navigation.navigate('Profile')
+            } else {
+              confirmOrder()
             }
           }}
           style={({ pressed }) => [
@@ -201,6 +240,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
     try {
       const fetchedRestaurant = await getDetail(route.params.id)
       setRestaurant(fetchedRestaurant)
+      setDireccion(fetchedRestaurant.address)
     } catch (error) {
       showMessage({
         message: `There was an error while retrieving restaurant details (id ${route.params.id}). ${error}`,
