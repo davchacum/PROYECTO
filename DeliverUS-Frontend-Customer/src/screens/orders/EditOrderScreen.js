@@ -16,7 +16,7 @@ import { buildInitialValues } from '../Helper'
 export default function EditOrderScreen ({ navigation, route }) {
   const [backendErrors, setBackendErrors] = useState()
   const [order, setOrder] = useState({})
-  const [initialOrderValues, setInitialOrderValues] = useState({ naddress: null })
+  const [initialOrderValues, setInitialOrderValues] = useState({ address: null })
 
   useEffect(() => {
     async function fetchOrderDetail () {
