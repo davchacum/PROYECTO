@@ -1,34 +1,28 @@
 import React, { useEffect, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import * as ExpoImagePicker from 'expo-image-picker'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
+import * as yup from 'yup'
+import { getOrderDetails, updateOrder } from '../../api/OrderEnpoints'
 import InputItem from '../../components/InputItem'
 import TextRegular from '../../components/TextRegular'
 import * as GlobalStyles from '../../styles/GlobalStyles'
 import { showMessage } from 'react-native-flash-message'
-import * as yup from 'yup'
 import { Formik } from 'formik'
 import TextError from '../../components/TextError'
 import { prepareEntityImages } from '../../api/helpers/FileUploadHelper'
 import { buildInitialValues } from '../Helper'
-import { getOrderDetails } from '../../api/OrderEnpoints'
 
 export default function EditOrderScreen ({ navigation, route }) {
   const [backendErrors, setBackendErrors] = useState()
   const [order, setOrder] = useState({})
-
-  const [initialOrderValues, setInitialOrderValues] = useState({ address: null })
-  const validationSchema = yup.object().shape({
-    address: yup
-      .string()
-      .max(255, 'Address too long')
-      .required('Address is required')
-  })
+  const [initialOrderValues, setInitialOrderValues] = useState({ naddress: null })
 
   useEffect(() => {
     async function fetchOrderDetail () {
       try {
         const fetchedOrder = await getOrderDetails(route.params.id)
-        const preparedOrder = prepareEntityImages(fetchedOrder, [])
+        const preparedOrder = prepareEntityImages(fetchedOrder)
         setOrder(preparedOrder)
         const initialValues = buildInitialValues(preparedOrder, initialOrderValues)
         setInitialOrderValues(initialValues)
@@ -54,19 +48,39 @@ export default function EditOrderScreen ({ navigation, route }) {
         style: GlobalStyles.flashStyle,
         titleStyle: GlobalStyles.flashTextStyle
       })
-      navigation.navigate('OrderDetailScreen', { id: order.id })
+      navigation.navigate('OrdersScreen', { dirty: true })
     } catch (error) {
       console.log(error)
       setBackendErrors(error.errors)
     }
   }
+
+  const validationSchema = yup.object().shape({
+    address: yup
+      .string()
+      .max(255, 'Address too long')
+      .required('Address is required')
+  })
+
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const { status } = await ExpoImagePicker.requestMediaLibraryPermissionsAsync()
+        if (status !== 'granted') {
+          alert('Sorry, we need camera roll permissions to make this work!')
+        }
+      }
+    })()
+  }, [])
+
   return (
     <Formik
-      enableReinitialize
       validationSchema={validationSchema}
+      enableReinitialize
       initialValues={initialOrderValues}
-      onSubmit={updateOrder}>
-      {({ handleSubmit, values }) => (
+      onSubmit={updateOrder}
+      >
+      {({ handleSubmit, setFieldValue, values }) => (
         <ScrollView>
           <View style={{ alignItems: 'center' }}>
             <View style={{ width: '60%' }}>
@@ -74,12 +88,13 @@ export default function EditOrderScreen ({ navigation, route }) {
                 name='address'
                 label='Address:'
               />
+
               {backendErrors &&
                 backendErrors.map((error, index) => <TextError key={index}>{error.param}-{error.msg}</TextError>)
               }
 
               <Pressable
-                onPress={ handleSubmit }
+                onPress={handleSubmit}
                 style={({ pressed }) => [
                   {
                     backgroundColor: pressed
@@ -117,7 +132,6 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     marginLeft: 5
-
   },
   imagePicker: {
     height: 40,
@@ -130,9 +144,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderWidth: 1,
     alignSelf: 'center',
-    marginTop: 5
-  },
-  switch: {
     marginTop: 5
   }
 })
