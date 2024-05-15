@@ -22,7 +22,7 @@ export default function EditOrderScreen ({ navigation, route }) {
     async function fetchOrderDetail () {
       try {
         const fetchedOrder = await getOrderDetails(route.params.id)
-        const preparedOrder = prepareEntityImages(fetchedOrder)
+        const preparedOrder = prepareEntityImages(fetchedOrder, [])
         setOrder(preparedOrder)
         const initialValues = buildInitialValues(preparedOrder, initialOrderValues)
         setInitialOrderValues(initialValues)
