@@ -10,7 +10,7 @@ import * as GlobalStyles from '../../styles/GlobalStyles'
 import defaultProductImage from '../../../assets/product.jpeg'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { AuthorizationContext } from '../../context/AuthorizationContext'
-// import { createOrder } from '../../api/OrderEndpoints'
+import { createOrder } from '../../api/OrderEnpoints'
 
 export default function RestaurantDetailScreen ({ navigation, route }) {
   const [restaurant, setRestaurant] = useState({})
@@ -68,18 +68,15 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
           .filter(element => element.quantity > 0)
         const values = { address: direccion, restaurantId: restaurant.id, products: productQuantity }
         setOrderToBeConfirmed(values)
-        if (typeof createOrder === 'function') {
-          await createOrder(orderToBeConfirmed)
-          showMessage({
-            message: 'Your order has been created.',
-            type: 'success',
-            style: GlobalStyles.flashStyle,
-            titleStyle: GlobalStyles.flashTextStyle
-          })
-          deleteOrder()
-        } else {
-          throw new Error('address:' + orderToBeConfirmed.address + ' rId:' + orderToBeConfirmed.restaurantId + ' p:' + orderToBeConfirmed.products)
-        }
+
+        await createOrder(orderToBeConfirmed)
+        showMessage({
+          message: 'Your order has been created.',
+          type: 'success',
+          style: GlobalStyles.flashStyle,
+          titleStyle: GlobalStyles.flashTextStyle
+        })
+        deleteOrder()
       }
     } catch (error) {
       console.error('Error while creating order:', error)
