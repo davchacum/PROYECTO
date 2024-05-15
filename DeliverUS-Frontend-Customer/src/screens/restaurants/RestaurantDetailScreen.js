@@ -10,19 +10,22 @@ import * as GlobalStyles from '../../styles/GlobalStyles'
 import defaultProductImage from '../../../assets/product.jpeg'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { AuthorizationContext } from '../../context/AuthorizationContext'
-// import { create } from '../../api/OrderEndpoints'
+// import { createOrder } from '../../api/OrderEndpoints'
 
 export default function RestaurantDetailScreen ({ navigation, route }) {
   const [restaurant, setRestaurant] = useState({})
-  const [direccion, setDireccion] = useState('')
+  const [direccion, setDireccion] = useState(route.params.id.address)
   const [counts, setCount] = useState(new Map()) // Estado para el valor del botón del medio
   const { loggedInUser } = useContext(AuthorizationContext)
 
-  const [orderToBeConfirmed, setOrderToBeConfirmed] = useState(null)
+  const [orderToBeConfirmed, setOrderToBeConfirmed] = useState({})
 
   useEffect(() => {
     fetchRestaurantDetail()
   }, [route])
+
+  useEffect(() => {
+  }, [orderToBeConfirmed])
 
   const myValue = (id) => {
     if (!counts.has(id)) {
@@ -64,11 +67,18 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
         const productQuantity = [...counts].map(([productId, quantity]) => ({ productId, quantity }))
           .filter(element => element.quantity > 0)
         const values = { address: direccion, restaurantId: restaurant.id, products: productQuantity }
-        await setOrderToBeConfirmed(values)
-        if (typeof create === 'function') {
-          await create(orderToBeConfirmed)
+        setOrderToBeConfirmed(values)
+        if (typeof createOrder === 'function') {
+          await createOrder(orderToBeConfirmed)
+          showMessage({
+            message: 'Your order has been created.',
+            type: 'success',
+            style: GlobalStyles.flashStyle,
+            titleStyle: GlobalStyles.flashTextStyle
+          })
+          deleteOrder()
         } else {
-          console.error('Error: create function is not defined')
+          throw new Error('address:' + orderToBeConfirmed.address + ' rId:' + orderToBeConfirmed.restaurantId + ' p:' + orderToBeConfirmed.products)
         }
       }
     } catch (error) {
@@ -125,6 +135,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
               })
               navigation.navigate('Profile')
             } else {
+              fetchRestaurantDetail()
               confirmOrder()
             }
           }}
