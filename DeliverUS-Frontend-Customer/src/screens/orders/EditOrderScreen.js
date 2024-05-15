@@ -1,117 +1,60 @@
 import React, { useEffect, useState } from 'react'
-import { Image, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native'
-import * as ExpoImagePicker from 'expo-image-picker'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import InputItem from '../../components/InputItem'
 import TextRegular from '../../components/TextRegular'
 import * as GlobalStyles from '../../styles/GlobalStyles'
-import defaultProductImage from '../../../assets/product.jpeg'
 import { showMessage } from 'react-native-flash-message'
-import DropDownPicker from 'react-native-dropdown-picker'
 import * as yup from 'yup'
-import { ErrorMessage, Formik } from 'formik'
+import { Formik } from 'formik'
 import TextError from '../../components/TextError'
-import { getProductCategories, getDetail, update } from '../../api/ProductEndpoints'
 import { prepareEntityImages } from '../../api/helpers/FileUploadHelper'
 import { buildInitialValues } from '../Helper'
+import { getOrderDetails } from '../../api/OrderEnpoints'
 
-export default function EditProductScreen ({ navigation, route }) {
-  const [open, setOpen] = useState(false)
-  const [productCategories, setProductCategories] = useState([])
+export default function EditOrderScreen ({ navigation, route }) {
   const [backendErrors, setBackendErrors] = useState()
-  const [product, setProduct] = useState({})
+  const [order, setOrder] = useState({})
 
-  const [initialProductValues, setInitialProductValues] = useState({ Address: null, description: null, price: null, order: null, productCategoryId: null, availability: null, image: null })
+  const [initialOrderValues, setInitialOrderValues] = useState({ address: null })
   const validationSchema = yup.object().shape({
-    name: yup
+    address: yup
       .string()
-      .max(255, 'Name too long')
-      .required('Name is required'),
-    price: yup
-      .number()
-      .positive('Please provide a positive price value')
-      .required('Price is required'),
-    order: yup
-      .number()
-      .nullable()
-      .positive('Please provide a positive order value')
-      .integer('Please provide an integer order value'),
-    availability: yup
-      .boolean(),
-    productCategoryId: yup
-      .number()
-      .positive()
-      .integer()
-      .required('Product category is required')
+      .max(255, 'Address too long')
+      .required('Address is required')
   })
 
   useEffect(() => {
-    async function fetchProductCategories () {
+    async function fetchOrderDetail () {
       try {
-        const fetchedProductCategories = await getProductCategories()
-        const fetchedProductCategoriesReshaped = fetchedProductCategories.map((e) => {
-          return {
-            label: e.name,
-            value: e.id
-          }
-        })
-        setProductCategories(fetchedProductCategoriesReshaped)
+        const fetchedOrder = await getOrderDetails(route.params.id)
+        const preparedOrder = prepareEntityImages(fetchedOrder, [])
+        setOrder(preparedOrder)
+        const initialValues = buildInitialValues(preparedOrder, initialOrderValues)
+        setInitialOrderValues(initialValues)
       } catch (error) {
         showMessage({
-          message: `There was an error while retrieving product categories. ${error} `,
+          message: `There was an error while retrieving order details (id ${route.params.id}). ${error}`,
           type: 'error',
           style: GlobalStyles.flashStyle,
           titleStyle: GlobalStyles.flashTextStyle
         })
       }
     }
-    fetchProductCategories()
-  }, [])
-
-  useEffect(() => {
-    async function fetchProductDetail () {
-      try {
-        const fetchedProduct = await getDetail(route.params.id)
-        const preparedProduct = prepareEntityImages(fetchedProduct, ['image'])
-        setProduct(preparedProduct)
-        const initialValues = buildInitialValues(preparedProduct, initialProductValues)
-        setInitialProductValues(initialValues)
-      } catch (error) {
-        showMessage({
-          message: `There was an error while retrieving product details (id ${route.params.id}). ${error}`,
-          type: 'error',
-          style: GlobalStyles.flashStyle,
-          titleStyle: GlobalStyles.flashTextStyle
-        })
-      }
-    }
-    fetchProductDetail()
+    fetchOrderDetail()
   }, [route])
-  const pickImage = async (onSuccess) => {
-    const result = await ExpoImagePicker.launchImageLibraryAsync({
-      mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1
-    })
-    if (!result.canceled) {
-      if (onSuccess) {
-        onSuccess(result)
-      }
-    }
-  }
 
-  const updateProduct = async (values) => {
+  const updateOrder = async (values) => {
     setBackendErrors([])
     try {
-      const updatedProduct = await update(product.id, values)
+      const updatedOrder = await updateOrder(order.id, values)
       showMessage({
-        message: `Product ${updatedProduct.name} succesfully updated`,
+        message: `Order ${updatedOrder.name} succesfully updated`,
         type: 'success',
         style: GlobalStyles.flashStyle,
         titleStyle: GlobalStyles.flashTextStyle
       })
-      navigation.navigate('RestaurantDetailScreen', { id: product.restaurantId })
+      navigation.navigate('OrderDetailScreen', { id: order.id })
     } catch (error) {
       console.log(error)
       setBackendErrors(error.errors)
@@ -121,71 +64,16 @@ export default function EditProductScreen ({ navigation, route }) {
     <Formik
       enableReinitialize
       validationSchema={validationSchema}
-      initialValues={initialProductValues}
-      onSubmit={updateProduct}>
-      {({ handleSubmit, setFieldValue, values }) => (
+      initialValues={initialOrderValues}
+      onSubmit={updateOrder}>
+      {({ handleSubmit, values }) => (
         <ScrollView>
           <View style={{ alignItems: 'center' }}>
             <View style={{ width: '60%' }}>
               <InputItem
-                name='name'
-                label='Name:'
+                name='address'
+                label='Address:'
               />
-              <InputItem
-                name='description'
-                label='Description:'
-              />
-              <InputItem
-                name='price'
-                label='Price:'
-              />
-              <InputItem
-                name='order'
-                label='Order/position to be rendered:'
-              />
-
-              <DropDownPicker
-                open={open}
-                value={values.productCategoryId}
-                items={productCategories}
-                setOpen={setOpen}
-                onSelectItem={item => {
-                  setFieldValue('productCategoryId', item.value)
-                }}
-                setItems={setProductCategories}
-                placeholder="Select the product category"
-                containerStyle={{ height: 40, marginTop: 20, marginBottom: 20 }}
-                style={{ backgroundColor: GlobalStyles.brandBackground }}
-                dropDownStyle={{ backgroundColor: '#fafafa' }}
-              />
-              <ErrorMessage name={'productCategoryId'} render={msg => <TextError>{msg}</TextError> }/>
-
-              <TextRegular>Is it available?</TextRegular>
-              <Switch
-                trackColor={{ false: GlobalStyles.brandSecondary, true: GlobalStyles.brandPrimary }}
-                thumbColor={values.availability ? GlobalStyles.brandSecondary : '#f4f3f4'}
-                // onValueChange={toggleSwitch}
-                value={values.availability}
-                style={styles.switch}
-                onValueChange={value =>
-                  setFieldValue('availability', value)
-                }
-              />
-              <ErrorMessage name={'availability'} render={msg => <TextError>{msg}</TextError> }/>
-
-              <Pressable onPress={() =>
-                pickImage(
-                  async result => {
-                    await setFieldValue('image', result)
-                  }
-                )
-              }
-                style={styles.imagePicker}
-              >
-                <TextRegular>Product image: </TextRegular>
-                <Image style={styles.image} source={values.image ? { uri: values.image.assets[0].uri } : defaultProductImage} />
-              </Pressable>
-
               {backendErrors &&
                 backendErrors.map((error, index) => <TextError key={index}>{error.param}-{error.msg}</TextError>)
               }
