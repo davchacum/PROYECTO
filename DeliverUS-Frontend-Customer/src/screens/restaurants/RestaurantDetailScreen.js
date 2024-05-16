@@ -14,18 +14,27 @@ import { createOrder } from '../../api/OrderEnpoints'
 
 export default function RestaurantDetailScreen ({ navigation, route }) {
   const [restaurant, setRestaurant] = useState({})
-  const [direccion, setDireccion] = useState(route.params.id.address)
+  const [direccion, setDireccion] = useState('')
   const [counts, setCount] = useState(new Map()) // Estado para el valor del botón del medio
   const { loggedInUser } = useContext(AuthorizationContext)
 
-  const [orderToBeConfirmed, setOrderToBeConfirmed] = useState({})
-
   useEffect(() => {
+    async function fetchRestaurantDetail () {
+      try {
+        const fetchedRestaurant = await getDetail(route.params.id)
+        setRestaurant(fetchedRestaurant)
+        setDireccion(fetchedRestaurant.address)
+      } catch (error) {
+        showMessage({
+          message: `There was an error while retrieving restaurant details (id ${route.params.id}). ${error}`,
+          type: 'error',
+          style: GlobalStyles.flashStyle,
+          titleStyle: GlobalStyles.flashTextStyle
+        })
+      }
+    }
     fetchRestaurantDetail()
   }, [route])
-
-  useEffect(() => {
-  }, [orderToBeConfirmed])
 
   const myValue = (id) => {
     if (!counts.has(id)) {
@@ -35,7 +44,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
     }
     return counts.get(id)
   }
-
   const incrementCountById = (id) => {
     const newCounts = new Map(counts)
     newCounts.set(id, newCounts.get(id) + 1)
@@ -67,9 +75,8 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
         const productQuantity = [...counts].map(([productId, quantity]) => ({ productId, quantity }))
           .filter(element => element.quantity > 0)
         const values = { address: direccion, restaurantId: restaurant.id, products: productQuantity }
-        setOrderToBeConfirmed(values)
-
-        await createOrder(orderToBeConfirmed)
+        // setOrderToBeConfirmed(values)
+        await createOrder(values)
         showMessage({
           message: 'Your order has been created.',
           type: 'success',
@@ -132,8 +139,14 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
               })
               navigation.navigate('Profile')
             } else {
-              fetchRestaurantDetail()
+              showMessage({
+                message: 'prueba',
+                type: 'danger',
+                style: GlobalStyles.flashStyle,
+                titleStyle: GlobalStyles.flashTextStyle
+              })
               confirmOrder()
+              navigation.navigate('My Orders', { dirty: true })
             }
           }}
           style={({ pressed }) => [
@@ -242,21 +255,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
         This restaurant has no products yet.
       </TextRegular>
     )
-  }
-
-  const fetchRestaurantDetail = async () => {
-    try {
-      const fetchedRestaurant = await getDetail(route.params.id)
-      setRestaurant(fetchedRestaurant)
-      setDireccion(fetchedRestaurant.address)
-    } catch (error) {
-      showMessage({
-        message: `There was an error while retrieving restaurant details (id ${route.params.id}). ${error}`,
-        type: 'error',
-        style: GlobalStyles.flashStyle,
-        titleStyle: GlobalStyles.flashTextStyle
-      })
-    }
   }
 
   return (
