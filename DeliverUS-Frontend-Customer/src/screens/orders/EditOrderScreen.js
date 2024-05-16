@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import * as yup from 'yup'
-import { getOrderDetails, updatedOrderById } from '../../api/OrderEnpoints'
+import { getOrderDetails, updateOrderById } from '../../api/OrderEnpoints'
 import InputItem from '../../components/InputItem'
 import TextRegular from '../../components/TextRegular'
 import * as GlobalStyles from '../../styles/GlobalStyles'
@@ -38,7 +38,7 @@ export default function EditOrderScreen ({ navigation, route }) {
   const updateOrder = async (values) => {
     setBackendErrors([])
     try {
-      const updatedOrder = await updatedOrderById(order.id, values)
+      const updatedOrder = await updateOrderById(order.id, values)
       showMessage({
         message: `Order ${updatedOrder.name} succesfully updated`,
         type: 'success',

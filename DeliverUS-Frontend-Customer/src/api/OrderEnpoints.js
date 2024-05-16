@@ -16,8 +16,8 @@ function removeOrderById (id) {
   return destroy(`orders/${id}`)
 }
 
-function updateOrder (id, data) {
+function updateOrderById (id, data) {
   return put(`orders/${id}`, data)
 }
 
-export { getAllOrders, getOrderDetails, createOrder, removeOrderById, updateOrder }
+export { getAllOrders, getOrderDetails, createOrder, removeOrderById, updateOrderById }
