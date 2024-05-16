@@ -5,9 +5,9 @@ import TextRegular from '../../components/TextRegular'
 import TextSemiBold from '../../components/TextSemibold'
 import OrdersScreen from './OrdersScreen'
 import { showMessage } from 'react-native-flash-message'
+import { getAllOrders, removeOrderById, getOrderDetails } from '../../api/OrderEnpoints'
 // import { getAllOrders } from '../../api/OrderEnpoints'
 import * as GlobalStyles from '../../styles/GlobalStyles'
-import { getOrderDetails } from '../../api/OrderEnpoints'
 import DeleteModal from '../../components/DeleteModal'
 
 // import { getDetail } from '../../api/RestaurantEndpoints'
@@ -137,6 +137,29 @@ export default function OrderDetailScreen ({ navigation, route }) {
       </ImageCard>
     )
   }
+  const removeOrder = async (order) => {
+    try {
+      await removeOrderById(order.id)
+      await fetchOrders()
+      setOrderToBeDeleted(null)
+      showMessage({
+        message: `Order ${order.id} succesfully removed`,
+        type: 'success',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+      navigation.navigate('OrdersScreen', { dirty: true })
+    } catch (error) {
+      console.log(error)
+      setOrderToBeDeleted(null)
+      showMessage({
+        message: `Order ${order.id} could not be removed.`,
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    }
+  }
 
   const fetchOrderDetail = async () => {
     try {
@@ -151,6 +174,21 @@ export default function OrderDetailScreen ({ navigation, route }) {
       })
     }
   }
+
+  const fetchOrders = async () => {
+    try {
+      const fetchedOrders = await getAllOrders()
+      setOrder(fetchedOrders)
+    } catch (error) {
+      showMessage({
+        message: `There was an error while retrieving orders. ${error} `,
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    }
+  }
+
   return (
   <>
     <FlatList
@@ -163,8 +201,9 @@ export default function OrderDetailScreen ({ navigation, route }) {
     <DeleteModal
       isVisible={orderToBeDeleted !== null}
       onCancel={() => setOrderToBeDeleted(null)}
-      onConfirm={() => OrdersScreen.removeOrder(orderToBeDeleted)}>
+      onConfirm={() => removeOrder(orderToBeDeleted)}>
       <TextRegular>The order will be cancelled</TextRegular>
+      <TextRegular>Are you sure?</TextRegular>
     </DeleteModal>
   </>
   )

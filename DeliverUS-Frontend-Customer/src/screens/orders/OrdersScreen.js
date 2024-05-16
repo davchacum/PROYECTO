@@ -148,8 +148,8 @@ export default function RestaurantsScreen ({ navigation, route }) {
       isVisible={orderToBeDeleted !== null}
       onCancel={() => setOrderToBeDeleted(null)}
       onConfirm={() => removeOrder(orderToBeDeleted)}>
-        <TextRegular>The products of this restaurant will be deleted as well</TextRegular>
-        <TextRegular>If the restaurant has orders, it cannot be deleted.</TextRegular>
+        <TextRegular>This order will be deleted and you will be hungry!</TextRegular>
+        <TextRegular>Are you sure?</TextRegular>
     </DeleteModal>
     </>
   )
