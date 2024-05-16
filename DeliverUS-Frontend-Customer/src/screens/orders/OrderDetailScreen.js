@@ -70,7 +70,7 @@ export default function OrderDetailScreen ({ navigation, route }) {
         {order.status === 'pending' &&
         <View style={styles.actionButtonsContainer}>
           <Pressable
-           onPress={() => navigation.navigate('EditOrderScreen', { orderId: order.id })}
+           onPress={() => navigation.navigate('EditOrderScreen', { id: order.id })}
             style={({ pressed }) => [
               {
                 backgroundColor: pressed
