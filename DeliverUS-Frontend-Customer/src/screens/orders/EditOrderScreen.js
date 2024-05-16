@@ -13,6 +13,7 @@ import { buildInitialValues } from '../Helper'
 
 export default function EditOrderScreen ({ navigation, route }) {
   const [backendErrors, setBackendErrors] = useState()
+  const [productsOrder, setProductsOrder] = useState(new Map())
   const [order, setOrder] = useState({})
   const [initialOrderValues, setInitialOrderValues] = useState({ address: null })
 
@@ -21,6 +22,11 @@ export default function EditOrderScreen ({ navigation, route }) {
       try {
         const fetchedOrder = await getOrderDetails(route.params.id)
         setOrder(fetchedOrder)
+        const newProducts = new Map(productsOrder)
+        // newProducts.set(1, 1)
+        fetchedOrder.products.forEach(p => newProducts.set(p.id, p.OrderProducts.quantity))
+        setProductsOrder(newProducts)
+
         const initialValues = buildInitialValues(fetchedOrder, initialOrderValues)
         setInitialOrderValues(initialValues)
       } catch (error) {
@@ -38,7 +44,11 @@ export default function EditOrderScreen ({ navigation, route }) {
   const updateOrder = async (values) => {
     setBackendErrors([])
     try {
-      const updatedOrder = await updateOrderById(order.id, values)
+      const productQuantity = [...productsOrder].map(([productId, quantity]) => ({ productId, quantity }))
+        .filter(element => element.quantity > 0)
+      const valuess = { address: values.address, products: productQuantity }
+
+      const updatedOrder = await updateOrderById(order.id, valuess)
       showMessage({
         message: `Order ${updatedOrder.name} succesfully updated`,
         type: 'success',
@@ -51,7 +61,6 @@ export default function EditOrderScreen ({ navigation, route }) {
       setBackendErrors(error.errors)
     }
   }
-
   const validationSchema = yup.object().shape({
     address: yup
       .string()
@@ -66,13 +75,14 @@ export default function EditOrderScreen ({ navigation, route }) {
       initialValues={initialOrderValues}
       onSubmit={updateOrder}
       >
-      {({ handleSubmit }) => (
+      {({ handleSubmit, values }) => (
         <ScrollView>
           <View style={{ alignItems: 'center' }}>
             <View style={{ width: '60%' }}>
               <InputItem
                 name='address'
                 label='Address:'
+                value={values.address}
               />
 
               {backendErrors &&
