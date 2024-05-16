@@ -23,7 +23,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       try {
         const fetchedRestaurant = await getDetail(route.params.id)
         setRestaurant(fetchedRestaurant)
-        setDireccion(fetchedRestaurant.address)
+        setDireccion(loggedInUser.address)
       } catch (error) {
         showMessage({
           message: `There was an error while retrieving restaurant details (id ${route.params.id}). ${error}`,
