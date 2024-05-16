@@ -1,3 +1,4 @@
+
 /* eslint-disable react/prop-types */
 import React, { useContext, useEffect, useState } from 'react'
 import { StyleSheet, FlatList, Pressable, View } from 'react-native'
@@ -12,18 +13,11 @@ import { AuthorizationContext } from '../../context/AuthorizationContext'
 import { showMessage } from 'react-native-flash-message'
 import DeleteModal from '../../components/DeleteModal'
 import restaurantLogo from '../../../assets/restaurantLogo.jpeg'
-import { useFocusEffect } from '@react-navigation/native'
 
 export default function RestaurantsScreen ({ navigation, route }) {
   const [orders, setOrders] = useState([])
   const [orderToBeDeleted, setOrderToBeDeleted] = useState(null)
   const { loggedInUser } = useContext(AuthorizationContext)
-
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchOrders()
-    }, [])
-  )
 
   useEffect(() => {
     if (loggedInUser) {
@@ -31,7 +25,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
     } else {
       setOrders(null)
     }
-  }, [loggedInUser, route])
+  }, [loggedInUser, route, orders])
 
   const renderOrder = ({ item }) => {
     return (
