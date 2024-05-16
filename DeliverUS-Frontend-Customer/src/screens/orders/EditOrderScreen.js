@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import * as ExpoImagePicker from 'expo-image-picker'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import * as yup from 'yup'
-import { getOrderDetails, updateOrder } from '../../api/OrderEnpoints'
+import { getOrderDetails, updatedOrderById } from '../../api/OrderEnpoints'
 import InputItem from '../../components/InputItem'
 import TextRegular from '../../components/TextRegular'
 import * as GlobalStyles from '../../styles/GlobalStyles'
 import { showMessage } from 'react-native-flash-message'
 import { Formik } from 'formik'
 import TextError from '../../components/TextError'
-import { prepareEntityImages } from '../../api/helpers/FileUploadHelper'
 import { buildInitialValues } from '../Helper'
 
 export default function EditOrderScreen ({ navigation, route }) {
@@ -22,9 +20,8 @@ export default function EditOrderScreen ({ navigation, route }) {
     async function fetchOrderDetail () {
       try {
         const fetchedOrder = await getOrderDetails(route.params.id)
-        const preparedOrder = prepareEntityImages(fetchedOrder, [])
-        setOrder(preparedOrder)
-        const initialValues = buildInitialValues(preparedOrder, initialOrderValues)
+        setOrder(fetchedOrder)
+        const initialValues = buildInitialValues(fetchedOrder, initialOrderValues)
         setInitialOrderValues(initialValues)
       } catch (error) {
         showMessage({
@@ -41,7 +38,7 @@ export default function EditOrderScreen ({ navigation, route }) {
   const updateOrder = async (values) => {
     setBackendErrors([])
     try {
-      const updatedOrder = await updateOrder(order.id, values)
+      const updatedOrder = await updatedOrderById(order.id, values)
       showMessage({
         message: `Order ${updatedOrder.name} succesfully updated`,
         type: 'success',
@@ -62,17 +59,6 @@ export default function EditOrderScreen ({ navigation, route }) {
       .required('Address is required')
   })
 
-  useEffect(() => {
-    (async () => {
-      if (Platform.OS !== 'web') {
-        const { status } = await ExpoImagePicker.requestMediaLibraryPermissionsAsync()
-        if (status !== 'granted') {
-          alert('Sorry, we need camera roll permissions to make this work!')
-        }
-      }
-    })()
-  }, [])
-
   return (
     <Formik
       validationSchema={validationSchema}
@@ -80,7 +66,7 @@ export default function EditOrderScreen ({ navigation, route }) {
       initialValues={initialOrderValues}
       onSubmit={updateOrder}
       >
-      {({ handleSubmit, setFieldValue, values }) => (
+      {({ handleSubmit }) => (
         <ScrollView>
           <View style={{ alignItems: 'center' }}>
             <View style={{ width: '60%' }}>
