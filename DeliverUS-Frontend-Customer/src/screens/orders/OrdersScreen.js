@@ -12,11 +12,18 @@ import { AuthorizationContext } from '../../context/AuthorizationContext'
 import { showMessage } from 'react-native-flash-message'
 import DeleteModal from '../../components/DeleteModal'
 import restaurantLogo from '../../../assets/restaurantLogo.jpeg'
+import { useFocusEffect } from '@react-navigation/native'
 
 export default function RestaurantsScreen ({ navigation, route }) {
   const [orders, setOrders] = useState([])
   const [orderToBeDeleted, setOrderToBeDeleted] = useState(null)
   const { loggedInUser } = useContext(AuthorizationContext)
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchOrders()
+    }, [])
+  )
 
   useEffect(() => {
     if (loggedInUser) {
