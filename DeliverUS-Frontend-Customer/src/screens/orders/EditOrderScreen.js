@@ -166,7 +166,17 @@ export default function EditOrderScreen ({ navigation, route }) {
               {backendErrors &&
                 backendErrors.map((error, index) => <TextError key={index}>{error.param}-{error.msg}</TextError>)
               }
-              <Pressable
+            </View>
+          </View>
+          <FlatList
+                // ListHeaderComponent={renderHeader}
+                style={styles.container}
+                data={order.products}
+
+                renderItem={renderProduct}
+                keyExtractor={item => item.id.toString()}
+                />
+          <Pressable
                 onPress={handleSubmit}
                 style={({ pressed }) => [
                   {
@@ -183,16 +193,6 @@ export default function EditOrderScreen ({ navigation, route }) {
                   </TextRegular>
                 </View>
               </Pressable>
-            </View>
-          </View>
-          <FlatList
-                // ListHeaderComponent={renderHeader}
-                style={styles.container}
-                data={order.products}
-
-                renderItem={renderProduct}
-                keyExtractor={item => item.id.toString()}
-                />
         </ScrollView>
       )}
     </Formik>
