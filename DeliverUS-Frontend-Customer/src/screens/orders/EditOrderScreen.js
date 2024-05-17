@@ -12,11 +12,14 @@ import { Formik } from 'formik'
 import ImageCard from '../../components/ImageCard'
 import TextError from '../../components/TextError'
 import { buildInitialValues } from '../Helper'
+import defaultProductImage from '../../../assets/product.jpeg'
+import { getDetail } from '../../api/RestaurantEndpoints'
 
 export default function EditOrderScreen ({ navigation, route }) {
   const [backendErrors, setBackendErrors] = useState()
   const [counts, setCount] = useState(new Map())
   const [order, setOrder] = useState({})
+  const [restaurant, setRestaurant] = useState({})
   const [initialOrderValues, setInitialOrderValues] = useState({ address: null })
 
   useEffect(() => {
@@ -25,6 +28,9 @@ export default function EditOrderScreen ({ navigation, route }) {
         const fetchedOrder = await getOrderDetails(route.params.id)
         setOrder(fetchedOrder)
         const newProducts = new Map(counts)
+        const fetchedRestaurant = await getDetail(fetchedOrder.restaurantId)
+        setRestaurant(fetchedRestaurant)
+        fetchedRestaurant.products.forEach(p => newProducts.set(p.id, 0))
         // newProducts.set(1, 1)
         fetchedOrder.products.forEach(p => newProducts.set(p.id, p.OrderProducts.quantity))
         setCount(newProducts)
@@ -171,7 +177,7 @@ export default function EditOrderScreen ({ navigation, route }) {
           <FlatList
                 // ListHeaderComponent={renderHeader}
                 style={styles.container}
-                data={order.products}
+                data={restaurant.products}
 
                 renderItem={renderProduct}
                 keyExtractor={item => item.id.toString()}

@@ -83,7 +83,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
           style: GlobalStyles.flashStyle,
           titleStyle: GlobalStyles.flashTextStyle
         })
-        deleteOrder()
+        deleteOrder(false)
       }
     } catch (error) {
       console.error('Error while creating order:', error)
@@ -96,7 +96,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
     }
   }
 
-  const deleteOrder = async () => {
+  const deleteOrder = async (mensaje) => {
     if (Array.from(counts.values()).every(v => v === 0)) {
       showMessage({
         message: 'You must choose a product to delete your order',
@@ -108,12 +108,14 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       const newCounts = new Map()
       counts.forEach((clave, valor) => newCounts.set(clave, 0))
       setCount(newCounts)
-      showMessage({
-        message: 'Your order has been deleted.',
-        type: 'success',
-        style: GlobalStyles.flashStyle,
-        titleStyle: GlobalStyles.flashTextStyle
-      })
+      if (mensaje === true) {
+        showMessage({
+          message: 'Your order has been deleted.',
+          type: 'success',
+          style: GlobalStyles.flashStyle,
+          titleStyle: GlobalStyles.flashTextStyle
+        })
+      }
     }
   }
 
@@ -175,7 +177,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
               })
               navigation.navigate('Profile')
             } else {
-              deleteOrder()
+              deleteOrder(true)
             }
           }}
           style={({ pressed }) => [
