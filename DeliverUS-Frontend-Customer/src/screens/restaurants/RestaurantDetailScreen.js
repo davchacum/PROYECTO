@@ -23,7 +23,9 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
       try {
         const fetchedRestaurant = await getDetail(route.params.id)
         setRestaurant(fetchedRestaurant)
-        setDireccion(loggedInUser.address)
+        if (loggedInUser) {
+          setDireccion(loggedInUser.address)
+        }
       } catch (error) {
         showMessage({
           message: `There was an error while retrieving restaurant details (id ${route.params.id}). ${error}`,
@@ -36,6 +38,7 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
     fetchRestaurantDetail()
   }, [route])
 
+  // Funcion para ver el valor del contador, si no hay se pone a 0
   const myValue = (id) => {
     if (!counts.has(id)) {
       const newCounts = new Map(counts)
@@ -141,12 +144,6 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
               })
               navigation.navigate('Profile')
             } else {
-              showMessage({
-                message: 'prueba',
-                type: 'danger',
-                style: GlobalStyles.flashStyle,
-                titleStyle: GlobalStyles.flashTextStyle
-              })
               confirmOrder()
               navigation.navigate('My Orders', { dirty: true })
             }
@@ -362,7 +359,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     height: 40,
     marginTop: 12,
-    margin: '-1.4%',
+    margin: '-1.5%',
     padding: 10,
     textAlign: 'center',
     flexDirection: 'column',

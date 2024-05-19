@@ -1,9 +1,8 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable } from 'react-native'
 import TextRegular from '../../components/TextRegular'
 import TextSemiBold from '../../components/TextSemibold'
-import OrdersScreen from './OrdersScreen'
 import { showMessage } from 'react-native-flash-message'
 import { getAllOrders, removeOrderById, getOrderDetails } from '../../api/OrderEnpoints'
 // import { getAllOrders } from '../../api/OrderEnpoints'

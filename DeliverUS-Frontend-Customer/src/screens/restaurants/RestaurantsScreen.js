@@ -46,7 +46,7 @@ export default function RestaurantsScreen ({ navigation, route }) {
       }
     }
     fetchPopularProducts()
-  }, [route])
+  }, [route, popularProducts])
 
   const renderRestaurant = ({ item }) => {
     return (
